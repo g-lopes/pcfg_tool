@@ -1,5 +1,6 @@
 // TODO: se livrar dessas variavies globais
 export const rules: any = {}
+// TODO: interfaces are not being used
 export interface RHS {
    str: string;
    count: number;
@@ -12,9 +13,12 @@ export interface Rule {
 export type SExpression = string | Array<SExpression>;
 
 export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
-  // Create object previously to avoid null pointer exception.
-  if (!rules[rule.lhs]) {
+  // Update counter of production rules with same lhs
+  if (rules[rule.lhs]) {
+    rules[rule.lhs].count += 1
+  } else {
     rules[rule.lhs] = {}
+    rules[rule.lhs].count = 1
   }
 
   rule.rhs.forEach(r => {
@@ -77,7 +81,7 @@ export function extractRules(exp: Array<SExpression>): void {
 }
 
 export function runMyApp(): void {
-  const exp: SExpression = ['S', ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
+  const exp: SExpression = ['S', ['NP', 'John'], ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
   extractRules(exp)
   console.log(JSON.stringify(rules))
 }
