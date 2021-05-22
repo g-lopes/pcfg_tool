@@ -3,8 +3,8 @@
 //   [index: number]: Node;
 // }
 // TODO: se livrar dessas variavies globais
-const rules: any = {}
-let counter = 0
+export const rules: any = {}
+export let counter = 0
 export interface RHS {
    str: string;
    count: number;
@@ -165,19 +165,56 @@ export function addToRules(rule: any): boolean {
   return true
 }
 
-export function extractRules(exp: SExpression): boolean {
+// export function extractRules(exp: SExpression): void {
+//   for (let i = 0; i < exp.length; i++) {
+//     const current = exp[i]
+//     const isLHS = i === 0 && typeof exp[i] === 'string'
+//     const _isTerminal = i === exp.length && typeof exp[i] === 'string'
+//     if (isAtom(current) && isLHS) {
+//       const lhs: string = (exp[i] as 'string')
+//       const list: Array<SExpression> = (exp as Array<SExpression>)
+//       const rhs: RHS = getRHS(list)
+//       const rule: any = {lhs, rhs}
+//       addToRules(rule)
+//       if ((exp as Array<SExpression>).length > 0) {
+//         ((exp as Array<SExpression>).shift())
+//         const copy = [...(exp as Array<SExpression>)]
+//         extractRules((copy as SExpression))
+//       }
+//     } else if (!isLHS && _isTerminal) {
+//       extractRules(current)
+//     }
+//   }
+// }
+
+export function extractRules(exp: Array<SExpression>): void {
   for (let i = 0; i < exp.length; i++) {
-    const current = exp[i]
-    // const isNonterminal = i !== exp.length - 1
-    const isLHS = i === 0 && typeof exp[i] === 'string'
-    if (isAtom(current) && isLHS) {
-      const lhs: string = (exp[i] as 'string')
-      const list: Array<SExpression> = (exp as Array<SExpression>)
-      const rhs: RHS = getRHS(list)
-      const rule: any = {leftHandSide: lhs, rightHandSide: rhs}
-      addToRules(rule)
-      console.log(JSON.stringify(rules))
+    const isNonTerminal = i === 0 && typeof exp[i] === 'string'
+    const isList = i !== 0 && Array.isArray(exp[i])
+
+    if (isNonTerminal) {
+      // console.log(`${JSON.stringify(exp[i])} is a nonterminal`)
+      const rhs: string[] = []
+      for (let j = 1; j < exp.length; j++) {
+        // const isTerminal = j !== 0 && typeof exp[j] === 'string'
+        if (Array.isArray(exp[j])) {
+          rhs.push(((exp[j] as Array<SExpression>)[0] as string))
+        }  else if (typeof exp[j] === 'string') {
+          rhs.push((exp[j] as string))
+        }
+      }
+      console.log(`${exp[i]} -> ${rhs}`)
+    } else if (isList) {
+      // console.log(`${JSON.stringify(exp[i])} is a list`)
+      extractRules((exp[i] as Array<SExpression>))
     }
   }
-  return true
 }
+
+export function runMyApp(): void {
+  const exp: SExpression = ['S', ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
+  extractRules(exp)
+  console.log(rules)
+}
+runMyApp()
+
