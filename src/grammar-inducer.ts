@@ -22,24 +22,20 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
     // TODO: use regex!!!
     const regex = /([^,"\[\]]+)/gm
     const str = JSON.stringify(r).match(regex)
-    let finalText = ''
+    let x = ''
     if (str.length > 1) {
-      // TODO: rename variables x, str and finalText
+      // TODO: rename variables x and str
       // TODO: see if there is a better implementation
-      let x = ''
       for (let i = 0; i < str?.length; i++) {
-        // if(i === x.length - 1) {}
-        x = x + str[i] + ' '
-      }
-      // If last character is a whitespace, then remove it.
-      if (x[x.length - 1] === ' ') {
-        finalText = (x as string).slice(0, -1)
-      } else {
-        finalText = (x as string)
+        if (i === x.length - 1) {
+          x += str[i]
+        } else {
+          x = x + str[i] + ' '
+        }
       }
     }
 
-    rules[rule.lhs][(finalText as string)] = {count: 1, weight: 1}
+    rules[rule.lhs][(x as string)] = {count: 1, weight: 1}
   })
   // TODO: see if it makes sense to return a boolean
   // if thats the case, then fix the returned value
