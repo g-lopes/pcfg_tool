@@ -16,6 +16,7 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
   if (!rules[rule.lhs]) {
     rules[rule.lhs] = {}
   }
+
   rule.rhs.forEach(r => {
     const regex = /([^,"\[\]]+)/gm
     const str = JSON.stringify(r).match(regex)
@@ -32,7 +33,13 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
       }
     }
 
-    rules[rule.lhs][(x as string)] = {count: 1, weight: 1}
+    if (rules[rule.lhs][(x as string)]) {
+      // if rule already exists, then increase counter
+      rules[rule.lhs][(x as string)].count += 1
+    } else {
+      // otherwise, initialize counter with 1
+      rules[rule.lhs][(x as string)] = {count: 1, weight: 1}
+    }
   })
   // TODO: see if it makes sense to return a boolean
   // if thats the case, then fix the returned value
