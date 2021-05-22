@@ -12,17 +12,13 @@ export interface Rule {
 export type SExpression = string | Array<SExpression>;
 
 export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
-  // TODO: implement it correctly
-  // Look data structure that u want to use (u wrote on a paper)
-  // console.log(rule)
+  // Create object previously to avoid null pointer exception.
   if (!rules[rule.lhs]) {
     rules[rule.lhs] = {}
   }
   rule.rhs.forEach(r => {
-    // TODO: use regex!!!
     const regex = /([^,"\[\]]+)/gm
     const str = JSON.stringify(r).match(regex)
-    // console.log(str)
     let x = ''
     if (str.length > 0) {
       // TODO: rename variables x and str
@@ -40,6 +36,8 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
   })
   // TODO: see if it makes sense to return a boolean
   // if thats the case, then fix the returned value
+  // maybe use throw and catch to alert the user if
+  // there is an error when adding a new procution rule
   return true
 }
 
