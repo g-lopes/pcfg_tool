@@ -22,8 +22,9 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
     // TODO: use regex!!!
     const regex = /([^,"\[\]]+)/gm
     const str = JSON.stringify(r).match(regex)
+    // console.log(str)
     let x = ''
-    if (str.length > 1) {
+    if (str.length > 0) {
       // TODO: rename variables x and str
       // TODO: see if there is a better implementation
       for (let i = 0; i < str?.length; i++) {
@@ -73,7 +74,6 @@ export function extractRules(exp: Array<SExpression>): void {
 export function runMyApp(): void {
   const exp: SExpression = ['S', ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
   extractRules(exp)
-  // console.log('rules = ')
   console.log(JSON.stringify(rules))
 }
 runMyApp()
