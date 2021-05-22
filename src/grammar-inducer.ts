@@ -12,7 +12,17 @@ export interface Rule {
 export type SExpression = string | Array<SExpression>;
 
 export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
-  rules[rule.lhs] = rule.rhs
+  // TODO: implement it correctly
+  // Look data structure that u want to use (u wrote on a paper)
+  console.log(rule)
+  if (!rules[rule.lhs]) {
+    rules[rule.lhs] = {}
+  }
+  rule.rhs.forEach(r => {
+    rules[rule.lhs][(r as string)] = {count: 1, weight: 1}
+  })
+  // rules[rule.lhs] = rule.rhs
+
   return true
 }
 
@@ -23,15 +33,19 @@ export function extractRules(exp: Array<SExpression>): void {
 
     if (isNonTerminal) {
       const lhs: string = (exp[i] as string)
-      const rhs: string[] = []
+      const x: string[] = []
+      const rhs: string[][] = []
 
+      // Loop to get rhs of production rule
       for (let j = 1; j < exp.length; j++) {
         if (Array.isArray(exp[j])) {
-          rhs.push(((exp[j] as Array<SExpression>)[0] as string))
+          x.push(((exp[j] as Array<SExpression>)[0] as string))
         }  else if (typeof exp[j] === 'string') {
-          rhs.push((exp[j] as string))
+          x.push((exp[j] as string))
         }
       }
+
+      rhs.push(x)
 
       addToRules({lhs, rhs})
     } else if (isList) {
@@ -43,7 +57,8 @@ export function extractRules(exp: Array<SExpression>): void {
 export function runMyApp(): void {
   const exp: SExpression = ['S', ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
   extractRules(exp)
-  console.log(rules)
+  console.log('rules = ')
+  console.log(JSON.stringify(rules))
 }
 runMyApp()
 
