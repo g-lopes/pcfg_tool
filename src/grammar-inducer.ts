@@ -14,10 +14,12 @@ export type SExpression = string | Array<SExpression>;
 
 export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
   // Update counter of production rules with same lhs
+  // TODO: consider extracting this piece of code
   if (rules[rule.lhs]) {
     rules[rule.lhs].count += 1
   } else {
     rules[rule.lhs] = {}
+    rules[rule.lhs].rhs = {}
     rules[rule.lhs].count = 1
   }
 
@@ -36,13 +38,14 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
         }
       }
     }
-
-    if (rules[rule.lhs][(x as string)]) {
+    // TODO: place rhs inside a special object
+    // TODO: consider extracting this piece of code
+    if (rules[rule.lhs].rhs[(x as string)]) {
       // if rule already exists, then increase counter
-      rules[rule.lhs][(x as string)].count += 1
+      rules[rule.lhs].rhs[(x as string)].count += 1
     } else {
       // otherwise, initialize counter with 1
-      rules[rule.lhs][(x as string)] = {count: 1, weight: 1}
+      rules[rule.lhs].rhs[(x as string)] = {count: 1, weight: 1}
     }
   })
   // TODO: see if it makes sense to return a boolean
