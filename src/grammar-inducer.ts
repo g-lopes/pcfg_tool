@@ -1,4 +1,9 @@
 // TODO: se livrar dessas variavies globais
+// TODO: consider making 2 implementations to see which one has better performance
+// first implementation should calculate 'count' and 'weight' of each rule as soon
+// as they are created. the second implementation should only calculate these
+// parameters if the user actually asks for it (probably the better solution)
+// if we calculate the probability on-demand, then we dont need the 'weight' property
 export const rules: any = {}
 // TODO: interfaces are not being used
 export interface RHS {
@@ -36,11 +41,12 @@ export function buildRHSString(tokens: string[]): string {
   let rhs = ''
   if (tokens.length > 0) {
     for (let i = 0; i < tokens?.length; i++) {
-      if (i === rhs.length - 1) {
-        rhs += tokens[i]
-      } else {
-        rhs = rhs + tokens[i] + ' '
-      }
+      rhs = rhs + tokens[i] + ' '
+    }
+    // TODO: probably there is a better implementation of this
+    // remove last whitespace from string if any
+    if (rhs[rhs.length - 1] === ' ') {
+      rhs = rhs.slice(0, -1)
     }
   }
   return rhs
@@ -91,10 +97,36 @@ export function extractRules(exp: Array<SExpression>): void {
   }
 }
 
+export function getRuleProbability(rule: { lhs: string; rhs: string }): number {
+  const lhs = rule.lhs
+  const rhs = rule.rhs
+  let probability = -1
+
+  Object.keys(rules).forEach(l => {
+    if (l === lhs) {
+      const numberOfRulesWithSameLHS = rules[lhs].count
+      Object.keys(rules[lhs].rhs).forEach(r => {
+        if (r === rhs) {
+          const numberOfRulesWithSameLHSAndRHS = rules[lhs].rhs[rhs].count
+          probability = numberOfRulesWithSameLHSAndRHS / numberOfRulesWithSameLHS
+        }
+      })
+    }
+  })
+
+  return probability
+}
+
+export function printRuleWithProbability(rule: { lhs: string; rhs: string }): void {
+  console.log(`${rule.lhs} -> ${rule.rhs} ${getRuleProbability(rule)}`)
+}
+
 export function runMyApp(): void {
   const exp: SExpression = ['S', ['NP', 'John'], ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
   extractRules(exp)
-  console.log(JSON.stringify(rules))
+  // console.log(JSON.stringify(rules))
+  // console.log(getRuleProbability({lhs: 'NP', rhs: 'John'}))
+  printRuleWithProbability({lhs: 'VP', rhs: 'V NP'})
 }
 runMyApp()
 
