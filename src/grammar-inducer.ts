@@ -12,9 +12,7 @@ export interface Rule {
 
 export type SExpression = string | Array<SExpression>;
 
-export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
-  // Update counter of production rules with same lhs
-  // TODO: consider extracting this piece of code
+export function updateCountLHS(rule: { lhs: string; rhs: Array<SExpression> }): void {
   if (rules[rule.lhs]) {
     rules[rule.lhs].count += 1
   } else {
@@ -22,31 +20,41 @@ export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): bool
     rules[rule.lhs].rhs = {}
     rules[rule.lhs].count = 1
   }
+}
+
+export function updateCountRHS(rule: { lhs: string; rhs: Array<SExpression> }, x: string): void {
+  if (rules[rule.lhs].rhs[(x as string)]) {
+    // if rule already exists, then increase counter
+    rules[rule.lhs].rhs[(x as string)].count += 1
+  } else {
+    // otherwise, initialize counter with 1
+    rules[rule.lhs].rhs[(x as string)] = {count: 1, weight: 1}
+  }
+}
+
+export function buildRHSString(tokens: string[]): string {
+  let rhs = ''
+  if (tokens.length > 0) {
+    for (let i = 0; i < tokens?.length; i++) {
+      if (i === rhs.length - 1) {
+        rhs += tokens[i]
+      } else {
+        rhs = rhs + tokens[i] + ' '
+      }
+    }
+  }
+  return rhs
+}
+
+export function addToRules(rule: { lhs: string; rhs: Array<SExpression> }): boolean {
+  updateCountLHS(rule)
 
   rule.rhs.forEach(r => {
     const regex = /([^,"\[\]]+)/gm
-    const str = JSON.stringify(r).match(regex)
-    let x = ''
-    if (str.length > 0) {
-      // TODO: rename variables x and str
-      // TODO: see if there is a better implementation
-      for (let i = 0; i < str?.length; i++) {
-        if (i === x.length - 1) {
-          x += str[i]
-        } else {
-          x = x + str[i] + ' '
-        }
-      }
-    }
-    // TODO: place rhs inside a special object
-    // TODO: consider extracting this piece of code
-    if (rules[rule.lhs].rhs[(x as string)]) {
-      // if rule already exists, then increase counter
-      rules[rule.lhs].rhs[(x as string)].count += 1
-    } else {
-      // otherwise, initialize counter with 1
-      rules[rule.lhs].rhs[(x as string)] = {count: 1, weight: 1}
-    }
+    const tokens = JSON.stringify(r).match(regex)
+    const rhs: string = buildRHSString((tokens as string[]))
+
+    updateCountRHS(rule, rhs)
   })
   // TODO: see if it makes sense to return a boolean
   // if thats the case, then fix the returned value
