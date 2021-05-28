@@ -5,6 +5,7 @@
 // as they are created. the second implementation should only calculate these
 // parameters if the user actually asks for it (probably the better solution)
 // if we calculate the probability on-demand, then we dont need the 'weight' property
+import * as fs from 'fs'
 export const rules: Rule = {}
 export interface RuleStats {
    rhsCount: number;
@@ -20,7 +21,13 @@ export interface Rule {
   [lhs: string]: {rhs: RHS; lhsCount: number};
 }
 
-export type SExpression = string | Array<SExpression>;
+export type SExpression = string | Array<SExpression>
+
+export type ResultSuccess<T> = { type: 'success'; value: T }
+
+export type ResultError = { type: 'error'; error: Error }
+
+export type Result<T> = ResultSuccess<T> | ResultError
 
 // TODO: change name of the function based on its functionality
 // here we are creating an object AND initializing its counter
@@ -44,32 +51,17 @@ export function updateCountRHS(lhs: string, isTerminal: boolean, rhs: string): v
   }
 }
 
-// export function buildRHSString(tokens: string[]): string {
-//   let rhs = ''
-//   if (tokens.length > 0) {
-//     for (let i = 0; i < tokens?.length; i++) {
-//       rhs = rhs + tokens[i] + ' '
-//     }
-//     // TODO: probably there is a better implementation of this
-//     // remove last whitespace from string if any
-//     if (rhs[rhs.length - 1] === ' ') {
-//       rhs = rhs.slice(0, -1)
-//     }
-//   }
-//   return rhs
-// }
-
 export function addToRules(rule: { lhs: string; isTerminal: boolean; rhs: string[][] }): void {
   updateCountLHS(rule.lhs)
 
   rule.rhs.forEach(r => {
-    let x = ''
+    let formatedRHS = ''
     for (let i = 0; i < r.length - 1; i++) {
-      x = x + r[i] + ' '
+      formatedRHS = formatedRHS + r[i] + ' '
     }
-    x += r[r.length - 1]
+    formatedRHS += r[r.length - 1]
 
-    updateCountRHS(rule.lhs, rule.isTerminal, x)
+    updateCountRHS(rule.lhs, rule.isTerminal, formatedRHS)
   })
 }
 
@@ -104,34 +96,78 @@ export function extractRules(exp: Array<SExpression>): void {
   }
 }
 
-// export function getRuleProbability(rule: { lhs: string; rhs: string }): number {
-//   const lhs = rule.lhs
-//   const rhs = rule.rhs
-//   let probability = -1
+export function getRuleStats(lhs: string, rhs: string): RuleStats {
+  return rules[lhs].rhs[rhs]
+}
 
-//   Object.keys(rules).forEach(l => {
-//     if (l === lhs) {
-//       const numberOfRulesWithSameLHS = rules[lhs].count
-//       Object.keys(rules[lhs].rhs).forEach(r => {
-//         if (r === rhs) {
-//           const numberOfRulesWithSameLHSAndRHS = rules[lhs].rhs[rhs].count
-//           probability = numberOfRulesWithSameLHSAndRHS / numberOfRulesWithSameLHS
-//         }
-//       })
-//     }
-//   })
+export function setRuleWeight(lhs: string, rhs: string, weight: number): void {
+  const ruleStats: RuleStats = getRuleStats(lhs, rhs)
+  ruleStats.weight = weight
+}
 
-//   return probability
-// }
+export function getRuleWeight(rule: {lhs: string; rhs: string}): number {
+  const lhsCount: number = rules[rule.lhs].lhsCount
+  const rhsCount: number = rules[rule.lhs].rhs[rule.rhs].rhsCount
+  return rhsCount / lhsCount
+}
 
-// export function printRuleWithProbability(rule: { lhs: string; rhs: string }): void {
-//   console.log(`${rule.lhs} -> ${rule.rhs} ${getRuleProbability(rule)}`)
-// }
+export function createRulesFile(name: string): void {
+  const options: { flags: string; fd?: number } = {flags: 'a'}
+  const rulesFile = fs.createWriteStream(`${name}.rules`, options)
+  if (!name) options.fd = 1 // if we are using stdout, then set filedescriptor to 1 (default stdout)
+
+  Object.keys(rules).forEach((l: string) => {
+    const lhs = l
+    Object.keys(rules[lhs].rhs).forEach((r: string) => {
+      const rhs = r
+      rulesFile.write(`${lhs} -> ${rhs} ${getRuleWeight({lhs, rhs})}\n`)
+    })
+  })
+
+  rulesFile.end()
+}
+
+export function createLexiconFile(name: string): void {
+  const options: { flags: string; fd?: number } = {flags: 'a'}
+  const lexiconFile = fs.createWriteStream(`${name}.lexicon`, options)
+
+  Object.keys(rules).forEach((l: string) => {
+    const lhs = l
+    Object.keys(rules[lhs].rhs).forEach((r: string) => {
+      if (rules[lhs].rhs[r].isTerminal) {
+        const rhs = r
+        lexiconFile.write(`${lhs} ${rhs} ${getRuleWeight({lhs, rhs})}\n`)
+      }
+    })
+  })
+
+  lexiconFile.end()
+}
+
+export function createWordsFile(name: string): void {
+  const options: { flags: string; fd?: number } = {flags: 'a'}
+  const wordsFile = fs.createWriteStream(`${name}.words`, options)
+  if (!name) options.fd = 1 // if we are using stdout, then set filedescriptor to 1 (default stdout)
+
+  Object.keys(rules).forEach((l: string) => {
+    const lhs = l
+    Object.keys(rules[lhs].rhs).forEach((r: string) => {
+      if (rules[lhs].rhs[r].isTerminal) {
+        wordsFile.write(`${r}\n`)
+      }
+    })
+  })
+
+  wordsFile.end()
+}
 
 export function runMyApp(): void {
   const exp: SExpression = ['S', ['NP', 'John'], ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
   extractRules(exp)
-  console.log(JSON.stringify(rules))
+  // createRulesFile('GRAMMAR')
+  // createLexiconFile('GRAMMAR')
+  // createWordsFile('GRAMMAR')
+  // console.log(JSON.stringify(rules))
   // // console.log(getRuleProbability({lhs: 'NP', rhs: 'John'}))
   // printRuleWithProbability({lhs: 'VP', rhs: 'V NP'})
 }
