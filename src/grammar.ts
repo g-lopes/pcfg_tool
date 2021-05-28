@@ -1,4 +1,7 @@
 import * as fs from 'fs'
+import * as readLine from 'readline'
+import * as path from 'path'
+import * as P from 'parsimmon'
 
 export interface RuleStats {
     rhsCount: number;
@@ -31,15 +34,15 @@ export class Grammar {
       console.log('constructor called!')
     }
 
+    public getRules(): any {
+      return this.rules
+    }
+
     public static getInstance(): Grammar {
       if (!Grammar.instance) {
         Grammar.instance = new Grammar()
       }
       return Grammar.instance
-    }
-
-    public logic() {
-      console.log('my logic!')
     }
 
     public updateCountLHS(lhs: string): void {
@@ -99,7 +102,6 @@ export class Grammar {
           }
 
           rhs.push(x)
-
           this.addToRules({lhs, isTerminal, rhs})
         } else if (isList) {
           this.extractRules((exp[i] as Array<SExpression>))
@@ -158,17 +160,59 @@ export class Grammar {
     public createWordsFile(name: string): void {
       const options: { flags: string; fd?: number } = {flags: 'a'}
       const wordsFile = fs.createWriteStream(`${name}.words`, options)
+      const uniqueWords = new Set()
       if (!name) options.fd = 1 // if we are using stdout, then set filedescriptor to 1 (default stdout)
 
       Object.keys(this.rules).forEach((l: string) => {
         const lhs = l
         Object.keys(this.rules[lhs].rhs).forEach((r: string) => {
           if (this.rules[lhs].rhs[r].isTerminal) {
-            wordsFile.write(`${r}\n`)
+            uniqueWords.add(r)
           }
         })
       })
 
+      for (const word of uniqueWords) {
+        wordsFile.write(`${word}\n`)
+      }
+
       wordsFile.end()
+    }
+
+    public async readFileLineByLine(filePath: string) {
+      let numberOfLines = 0
+      let input: fs.ReadStream | NodeJS.ReadStream = process.stdin
+      const absolutePath = path.resolve(filePath)
+      const stream: fs.ReadStream = fs.createReadStream(absolutePath)
+      input = stream
+
+      const rl: readLine.Interface = readLine.createInterface({
+        input: input,
+        output: process.stdout,
+        terminal: false,
+      })
+
+      for await (const line of rl) {
+        // processLine
+        const expression = this.tokenizer().File.tryParse(line)[0] // index 0 is important
+        this.extractRules(expression)
+        numberOfLines += 1
+      }
+      console.log(`numerOflines = ${numberOfLines}`)
+    }
+
+    public tokenizer(): P.Language {
+      return P.createLanguage({
+        // .alt takes a array of parsers as argument and outputs
+        // the value of the first one that succeeds.
+        SExp: rule => P.alt(rule.NonTerminal, rule.Terminal, rule.SExpList),
+        // .desc returns a new parser, whose failure msg is the string passed to it.
+        NonTerminal: () => P.regexp(/[^() ]+/),
+        Terminal: () => P.regexp(/[^() ]+/),
+        Atom: rule => P.alt(rule.NonTerminal, rule.Terminal),
+        SExpList: rule =>
+          rule.SExp.trim(P.optWhitespace).many().wrap(P.string('('), P.string(')')),
+        File: rule => rule.SExp.trim(P.optWhitespace).many(),
+      })
     }
 }
