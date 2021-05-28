@@ -160,15 +160,3 @@ export function createWordsFile(name: string): void {
 
   wordsFile.end()
 }
-
-export function runMyApp(): void {
-  const exp: SExpression = ['S', ['NP', 'John'], ['NP', 'John'], ['VP', ['V', 'hit'], ['NP', ['DET', 'the'], ['N', 'ball']]]]
-  extractRules(exp)
-  // createRulesFile('GRAMMAR')
-  // createLexiconFile('GRAMMAR')
-  // createWordsFile('GRAMMAR')
-  // console.log(JSON.stringify(rules))
-  // // console.log(getRuleProbability({lhs: 'NP', rhs: 'John'}))
-  // printRuleWithProbability({lhs: 'VP', rhs: 'V NP'})
-}
-runMyApp()
