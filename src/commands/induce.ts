@@ -40,7 +40,6 @@ export async function readFileLineByLine(filePath: string) {
   for await (const line of rl) {
     // processLine
     const expression = tokenizer.File.tryParse(line)
-    console.log(`${expression}/n`)
     extractRules(expression)
     numberOfLines += 1
   }
