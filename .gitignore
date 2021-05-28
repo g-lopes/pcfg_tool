@@ -10,3 +10,4 @@ yarn.lock
 *.rules
 *.words
 *.lexicon
+.DS_Store
