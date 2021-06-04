@@ -1,17 +1,17 @@
 {
+    "version": "0.2.0",
     "configurations": [
-        {
-            "type": "node",
-            "name": "vscode-jest-tests",
-            "request": "launch",
-            "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen",
-            "disableOptimisticBPs": true,
-            "program": "${workspaceFolder}/node_modules/.bin/jest",
-            "cwd": "${workspaceFolder}",
-            "args": [
-                "--runInBand"
-            ]
-        }
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Launch oclif pcfg_tool debugger",
+        "program": "${workspaceFolder}/bin/run",
+        "args": [
+          "parse",
+          "${workspaceFolder}/corpus/grammar.rules",
+          "${workspaceFolder}/corpus/grammar.lexicon",
+          "My name is John"
+        ]
+      }
     ]
-}
+  }
