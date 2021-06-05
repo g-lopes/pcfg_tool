@@ -18,17 +18,20 @@ function initializeMatrix(m: number, n: number): Set<string>[][]{
 function printMatrix(matrix: Array<Array<Set<string>>>): void {
   for (let i = 0; i < matrix.length; i++) {
     // new row
-    let row = ''
+    let row = i + ' '
     for (let j = 0; j < matrix[i].length; j++) {
       // new element
       let element = '['
       if (matrix[i][j].size > 0) {
         matrix[i][j].forEach(e => {
           const [nonTerminal, terminal, weight]: string = e
-          element = element + ' ' + nonTerminal
+          element = element + nonTerminal + ' , '
         })
       }
-      while(element.length < 8) {
+      if(element.endsWith(', ')) {
+        element = element.substr(0, element.length - 2)
+      }
+      while(element.length < 12) {
         element = element + ' '
       }
       element = element + ']'
@@ -36,6 +39,7 @@ function printMatrix(matrix: Array<Array<Set<string>>>): void {
     }
     console.log(row)
   }
+  console.log('\n')
 }
 
 function getWordProductionsFromLexiconFile(filePath: string, word: string): string[] {
@@ -78,6 +82,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<strin
     if (rules) {
       rules.forEach(r => matrix[i - 1][i].add(r))
     }
+    printMatrix(matrix)
     for (let j = i - 2; j === 0; j++) {
       for (let k = j + 1; k < i - 1; k++) {
         const bs: Set<string> = matrix[j][k]
@@ -87,7 +92,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<strin
       }
     }
   }
-  
+  console.log('Final Matrix: ')
   printMatrix(matrix)
   return matrix
 }
