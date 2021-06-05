@@ -1,6 +1,6 @@
-N book 0.3333333
-N flight 0.3333333
-N Houston 0.3333333
+N book 0.5
+N flight 0.4
+N Houston 0.1
 V book 1
 Det the 1
 Prep through 1
