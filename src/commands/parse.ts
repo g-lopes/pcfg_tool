@@ -1,48 +1,78 @@
 // ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
-import {Command, flags} from '@oclif/command'
+import {Command} from '@oclif/command'
 import {Grammar} from '../grammar'
 import * as fs from 'fs'
-import {getWordProductionsFromLexiconFile} from '../utils'
+import LineByLine = require('n-readlines')
 
-async function cky(grammar: any, sentence: string, lexiconFilePath: string): Promise<Set<string>[][]> {
+function printMatrix(matrix: Array<Array<Set<string>>>): void {
+  for (let i = 0; i < matrix.length; i++) {
+    let str = ''
+    for (let j = 0; j < matrix[i].length; j++) {
+      str += '['
+      if (matrix[i][j]) {
+        matrix[i][j].forEach(e => {
+          const [nonTerminal, terminal, weight]: string = e
+          str = str + nonTerminal + ' '
+        })
+      }
+      str += ']'
+    }
+    console.log(`${str}`)
+  }
+}
+
+function getWordProductionsFromLexiconFile(filePath: string, word: string): string[] {
+  const wordProductions: string[] = []
+  const liner = new LineByLine(filePath)
+
+  let line
+
+  while (line = liner.next()) {
+    const str = line.toString('ascii')
+    const [lhs, rhs, weight] = str.split(' ')
+    if (rhs === word) {
+      wordProductions.push(str)
+    }
+  }
+
+  return wordProductions
+}
+
+function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
+  const allCombinations: string[] = []
+  const bIterator = bs.entries()
+  const cIterator = cs.entries()
+  for (const b of bIterator) {
+    for (const c of cIterator) {
+      const newRHS = `${b}${c}`
+      allCombinations.push(newRHS)
+    }
+  }
+  return allCombinations
+}
+
+function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<string>[][] {
   const matrix: Set<string>[][] = []
   const words = sentence.split(' ')
-  const lexiconFileStream: fs.ReadStream = fs.createReadStream(lexiconFilePath)
-  let i = 1
   // Loop to get word production rules
-  for await (const w of words) {
+  for (let i = 1; i < words.length; i++) {
     matrix[i - 1] = []
     matrix[i - 1][i] = new Set<string>()
-    const rules = await getWordProductionsFromLexiconFile(lexiconFileStream, w)
-    console.log(`rules = ${JSON.stringify(rules)}`)
+    const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i])
     if (rules) {
       rules.forEach(r => matrix[i - 1][i].add(r))
     }
-    i += 1
+    for (let j = i - 2; j === 0; j++) {
+      for (let k = j + 1; k < i - 1; k++) {
+        const bs: Set<string> = matrix[j][k]
+        const cs: Set<string> = matrix[k][i]
+        const allBCCombinations: string[] = getAllCombinations(bs, cs)
+        // matrix[j][i]
+      }
+    }
   }
-  // for (let r = 2; r < numberOfWordsInSentence; r++) {
-  //   for (let i = 0; i < numberOfWordsInSentence - r; i++) {
-  //     const j = i + r
-  //     matrix[i][j] = new Set<string>()
-  //     for (let m = i; m < j; m++) {
-  //       const iterator1 = matrix[i][m].entries()
-  //       const iterator2 = matrix[m][j].entries()
-  //       for (const B of iterator1) {
-  //         for (const C of iterator2) {
-  //           const ruleString = `${B} ${C}`
-  //           Object.keys(grammar.getRules()).forEach(l => {
-  //             Object.values(grammar.getRules()[l].rhs).forEach((prod: string) => {
-  //               if (grammar.getRulles()[l].rhs[prod] === ruleString) {
-  //                 matrix[i][j].add(l)
-  //               }
-  //             })
-  //           })
-  //         }
-  //       }
-  //     }
-  //   }
-  // }
-  console.log(`cky concluded, matrix = ${matrix}`)
+
+  printMatrix(matrix)
   return matrix
 }
 
@@ -83,12 +113,12 @@ export default class Parse extends Command {
 
   async run() {
     console.log('📝 Parsing...')
-    const {args, flags} = this.parse(Parse)
+    const {args} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath, sentence} = args
     // console.log(`args = ${JSON.stringify(args)}`)
     // console.log(`flags = ${JSON.stringify(flags)}`)
     const g = Grammar.getInstance()
 
-    console.log(JSON.stringify(await cky(g, 'Partners', lexiconFilePath)))
+    cky(g, sentence, lexiconFilePath)
   }
 }

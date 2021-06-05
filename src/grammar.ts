@@ -179,26 +179,27 @@ export class Grammar {
       wordsFile.end()
     }
 
+    // TODO: use synchronous alternative
     public async readFileLineByLine(filePath: string) {
-      let numberOfLines = 0
-      let input: fs.ReadStream | NodeJS.ReadStream = process.stdin
-      const absolutePath = path.resolve(filePath)
-      const stream: fs.ReadStream = fs.createReadStream(absolutePath)
-      input = stream
+      // let numberOfLines = 0
+      // let input: fs.ReadStream | NodeJS.ReadStream = process.stdin
+      // const absolutePath = path.resolve(filePath)
+      // const stream: fs.ReadStream = fs.createReadStream(absolutePath)
+      // input = stream
 
-      const rl: readLine.Interface = readLine.createInterface({
-        input: input,
-        output: process.stdout,
-        terminal: false,
-      })
+      // const rl: readLine.Interface = readLine.createInterface({
+      //   input: input,
+      //   output: process.stdout,
+      //   terminal: false,
+      // })
 
-      for await (const line of rl) {
-        // processLine
-        const expression = this.tokenizer().File.tryParse(line)[0] // index 0 is important
-        this.extractRules(expression)
-        numberOfLines += 1
-      }
-      console.log(`numerOflines = ${numberOfLines}`)
+      // for await (const line of rl) {
+      //   // processLine
+      //   const expression = this.tokenizer().File.tryParse(line)[0] // index 0 is important
+      //   this.extractRules(expression)
+      //   numberOfLines += 1
+      // }
+      console.log('numerOflines')
     }
 
     public tokenizer(): P.Language {

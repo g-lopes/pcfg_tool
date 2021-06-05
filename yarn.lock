@@ -1327,6 +1327,13 @@
   resolved "https://registry.yarnpkg.com/@types/minimatch/-/minimatch-3.0.4.tgz#f0ec25dbf2f0e4b18647313ac031134ca5b24b21"
   integrity sha512-1z8k4wzFnNjVK/tlxvrWuK5WMt6mydWWP7+zvH5eFep4oj+UkrfiJTRtjCeBXNpwaA/FYqqtb4/QS4ianFpIRA==
 
+"@types/n-readlines@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@types/n-readlines/-/n-readlines-1.0.1.tgz#7a8882e671f05688649beb5f5b12c4b51b8d6529"
+  integrity sha512-n1ND4k+9hgtil2HnHK+1tIj1UWchsD+RwoH7eVQqLbUe8AxwLuqDEnx3Riq+twHoMTjP80Q/ilB3LGdyXKfTEg==
+  dependencies:
+    "@types/node" "*"
+
 "@types/node@*":
   version "15.12.0"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-15.12.0.tgz#6a459d261450a300e6865faeddb5af01c3389bb3"
@@ -4071,6 +4078,11 @@ mute-stream@0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/mute-stream/-/mute-stream-0.0.7.tgz#3075ce93bc21b8fab43e1bc4da7e8115ed1e7bab"
   integrity sha1-MHXOk7whuPq0PhvE2n6BFe0ee6s=
+
+n-readlines@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/n-readlines/-/n-readlines-1.0.1.tgz#bbb7364d38bc31a170a199f986fcacfa76b95f6e"
+  integrity sha512-z4SyAIVgMy7CkgsoNw7YVz40v0g4+WWvvqy8+ZdHrCtgevcEO758WQyrYcw3XPxcLxF+//RszTz/rO48nzD0wQ==
 
 nanomatch@^1.2.9:
   version "1.2.13"
