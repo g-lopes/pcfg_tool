@@ -7,7 +7,7 @@ function initializeMatrix(m: number, n: number): Set<string>[][]{
   const matrix: Set<string>[][] = []
   for(let i = 0; i < m; i++){
     matrix[i] = []
-    for(let j = 0; j < n; j++){
+    for(let j = 0; j < n + 1; j++){
       matrix[i][j] = new Set()
     }
 
@@ -24,8 +24,7 @@ function printMatrix(matrix: Array<Array<Set<string>>>): void {
       let element = '['
       if (matrix[i][j].size > 0) {
         matrix[i][j].forEach(e => {
-          const [nonTerminal, terminal, weight]: string = e
-          element = element + nonTerminal + ' , '
+          element = element + e + ' , '
         })
       }
       if(element.endsWith(', ')) {
@@ -76,21 +75,23 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<strin
   const words = sentence.split(' ')
   const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
   // Loop to get word production rules
-  for (let i = 1; i < words.length; i++) {
-    matrix[i - 1][i] = new Set<string>()
+  for (let i = 0; i < words.length; i++) {
+    matrix[i][i+1] = new Set<string>()
     const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i])
     if (rules) {
-      rules.forEach(r => matrix[i - 1][i].add(r))
+      rules.forEach(r => {
+        const [nonTerminal, terminal, weight] = r.split(' ')
+        matrix[i][i+1].add(nonTerminal)
+      })
     }
-    printMatrix(matrix)
-    for (let j = i - 2; j === 0; j++) {
-      for (let k = j + 1; k < i - 1; k++) {
-        const bs: Set<string> = matrix[j][k]
-        const cs: Set<string> = matrix[k][i]
-        const allBCCombinations: string[] = getAllCombinations(bs, cs)
-        // matrix[j][i]
-      }
-    }
+    // for (let j = i - 2; j === 0; j++) {
+    //   for (let k = j + 1; k < i - 1; k++) {
+    //     const bs: Set<string> = matrix[j][k]
+    //     const cs: Set<string> = matrix[k][i]
+    //     const allBCCombinations: string[] = getAllCombinations(bs, cs)
+    //     // matrix[j][i]
+    //   }
+    // }
   }
   console.log('Final Matrix: ')
   printMatrix(matrix)
