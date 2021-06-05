@@ -16,6 +16,11 @@ function initializeMatrix(m: number, n: number): Set<string>[][]{
 }
 
 function printMatrix(matrix: Array<Array<Set<string>>>): void {
+  let header = ''
+  for(let i = 0; i < matrix.length + 1; i++) {
+    header = header + '        ' + i + '     '
+  }
+  console.log(header)
   for (let i = 0; i < matrix.length; i++) {
     // new row
     let row = i + ' '
@@ -58,40 +63,66 @@ function getWordProductionsFromLexiconFile(filePath: string, word: string): stri
   return wordProductions
 }
 
-function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
-  const allCombinations: string[] = []
-  const bIterator = bs.entries()
-  const cIterator = cs.entries()
-  for (const b of bIterator) {
-    for (const c of cIterator) {
-      const newRHS = `${b}${c}`
-      allCombinations.push(newRHS)
+function getBinaryProductionsFromRulesFile(filePath: string, binaryProduction: string): string[] {
+  const binaryProductions: string[] = []
+  const liner = new LineByLine(filePath)
+
+  let line
+
+  while (line = liner.next()) {
+    const str = line.toString('ascii')
+    const regex = /(?<lhs>.*) -> (?<rhs>.*) ([0-9]*).([0-9]*)/
+    const matches = str.match(regex)
+    const rhs = (matches as RegExpMatchArray).groups!.rhs
+    const lhs: string = (matches as RegExpMatchArray).groups!.lhs
+
+    if (binaryProduction === rhs) {
+      binaryProductions.push(lhs)
     }
   }
+
+  return binaryProductions
+}
+
+function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
+  const allCombinations: string[] = []
+  bs.forEach(b => {
+    cs.forEach(c => {
+      allCombinations.push(b + ' ' + c)
+    })
+  })
   return allCombinations
 }
 
-function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<string>[][] {
+function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFilePath: string): Set<string>[][] {
   const words = sentence.split(' ')
   const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
   // Loop to get word production rules
-  for (let i = 0; i < words.length; i++) {
-    matrix[i][i+1] = new Set<string>()
-    const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i])
-    if (rules) {
-      rules.forEach(r => {
-        const [nonTerminal, terminal, weight] = r.split(' ')
-        matrix[i][i+1].add(nonTerminal)
-      })
+  for (let i = 1; i <= words.length; i++) {
+    // Loop to build the diagonal of the matrix
+    words.forEach(w => {
+      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i-1]) //TODO: check use of words[i-1] instead of w
+      if (rules) {
+        rules.forEach(r => {
+          const [nonTerminal, terminal, weight] = r.split(' ')
+          matrix[i - 1][i].add(nonTerminal)
+        })
+      }
+    })
+  }
+  // Loop to .... TODO: fix loops
+  for (let k = 2; k <= words.length; k++) {
+    for (let i = k - 2; i >= 0; i--) {
+      for(let j = i + 1; j <= k - 1; j++) {
+        const bs: Set<string> = matrix[i][j]
+        const cs: Set<string> = matrix[j][k]
+        const allBCCombinations: string[] = getAllCombinations(bs, cs)
+        allBCCombinations.forEach(rhs => {
+          const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
+          binaryProductions.forEach(production => matrix[i][k].add(production))
+        })
+      }
     }
-    // for (let j = i - 2; j === 0; j++) {
-    //   for (let k = j + 1; k < i - 1; k++) {
-    //     const bs: Set<string> = matrix[j][k]
-    //     const cs: Set<string> = matrix[k][i]
-    //     const allBCCombinations: string[] = getAllCombinations(bs, cs)
-    //     // matrix[j][i]
-    //   }
-    // }
   }
   console.log('Final Matrix: ')
   printMatrix(matrix)
@@ -141,6 +172,6 @@ export default class Parse extends Command {
     // console.log(`flags = ${JSON.stringify(flags)}`)
     const g = Grammar.getInstance()
 
-    cky(g, sentence, lexiconFilePath)
+    cky(g, sentence, lexiconFilePath, rulesFilePath)
   }
 }
