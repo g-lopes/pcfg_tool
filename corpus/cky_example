@@ -1,0 +1,29 @@
+N book 0.3333333
+N flight 0.3333333
+N Houston 0.3333333
+V book 1
+Det the 1
+Prep through 1
+S -> NP VP 0.5
+S -> VP 0.5
+NP -> N 0.25
+NP -> Det N 0.25
+NP -> NP NP 0.25
+NP -> NP PP 0.25
+VP -> V 0.3333333
+VP -> VP PP 0.3333333
+VP -> VP NP 0.3333333
+PP -> Prep NP 1
+
+                    S
+   _________________|__________________
+   |                                  |
+   VP                                 NP
+   |                     _____________|_____________  
+   V                    |                          |       
+   |                    NP                         PP
+   |            ________|________           _______|________       
+   |           |                 |         |                |
+   |           Det               N        PREP              N
+   |           |                 |         |                |
+  Book        the              flight   through          Houston

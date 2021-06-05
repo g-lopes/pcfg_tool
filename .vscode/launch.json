@@ -8,9 +8,9 @@
         "program": "${workspaceFolder}/bin/run",
         "args": [
           "parse",
-          "${workspaceFolder}/corpus/grammar.rules",
-          "${workspaceFolder}/corpus/grammar.lexicon",
-          "My name is John"
+          "${workspaceFolder}/corpus/cky_example.rules",
+          "${workspaceFolder}/corpus/cky_example.lexicon",
+          "book the flight through Houston"
         ]
       }
     ]
