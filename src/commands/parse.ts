@@ -1,23 +1,40 @@
 // ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
 import {Command} from '@oclif/command'
 import {Grammar} from '../grammar'
-import * as fs from 'fs'
 import LineByLine = require('n-readlines')
+
+function initializeMatrix(m: number, n: number): Set<string>[][]{
+  const matrix: Set<string>[][] = []
+  for(let i = 0; i < m; i++){
+    matrix[i] = []
+    for(let j = 0; j < n; j++){
+      matrix[i][j] = new Set()
+    }
+
+  }
+  return matrix
+}
 
 function printMatrix(matrix: Array<Array<Set<string>>>): void {
   for (let i = 0; i < matrix.length; i++) {
-    let str = ''
+    // new row
+    let row = ''
     for (let j = 0; j < matrix[i].length; j++) {
-      str += '['
-      if (matrix[i][j]) {
+      // new element
+      let element = '['
+      if (matrix[i][j].size > 0) {
         matrix[i][j].forEach(e => {
           const [nonTerminal, terminal, weight]: string = e
-          str = str + nonTerminal + ' '
+          element = element + ' ' + nonTerminal
         })
       }
-      str += ']'
+      while(element.length < 8) {
+        element = element + ' '
+      }
+      element = element + ']'
+      row = row + ' ' + element
     }
-    console.log(`${str}`)
+    console.log(row)
   }
 }
 
@@ -52,11 +69,10 @@ function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
 }
 
 function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<string>[][] {
-  const matrix: Set<string>[][] = []
   const words = sentence.split(' ')
+  const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
   // Loop to get word production rules
   for (let i = 1; i < words.length; i++) {
-    matrix[i - 1] = []
     matrix[i - 1][i] = new Set<string>()
     const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i])
     if (rules) {
@@ -71,7 +87,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string): Set<strin
       }
     }
   }
-
+  
   printMatrix(matrix)
   return matrix
 }
@@ -112,9 +128,9 @@ export default class Parse extends Command {
   ];
 
   async run() {
-    console.log('📝 Parsing...')
     const {args} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath, sentence} = args
+    console.log(`📝 Parsing ${sentence}`)
     // console.log(`args = ${JSON.stringify(args)}`)
     // console.log(`flags = ${JSON.stringify(flags)}`)
     const g = Grammar.getInstance()
