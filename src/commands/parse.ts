@@ -1,7 +1,20 @@
 // ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
 import {Command} from '@oclif/command'
-import {Grammar} from '../grammar'
 import LineByLine = require('n-readlines')
+
+/**
+ * @type {BooleanChart} 3D matrix of booleans
+ */
+type BooleanChart = boolean[][][];
+
+/**
+ * @interface {string} filePath - Path of the .lexicon file
+ */
+export interface Production {
+  lhs: string;
+  rhs: string;
+  weight: number;
+}
 
 function initializeMatrix(m: number, n: number): Set<string>[][] {
   const matrix: Set<string>[][] = []
@@ -45,21 +58,25 @@ function printMatrix(matrix: Array<Array<Set<string>>>): void {
   console.log('\n')
 }
 
-function getWordProductionsFromLexiconFile(filePath: string, word: string): string[] {
-  const wordProductions: string[] = []
+/**
+ * @param {string} filePath - Path of the .lexicon file
+ * @param {string} word - Word (terminal) that we want to find production rules for
+ * @returns {Production[]} All production rules that yield the given word
+ */
+export function getWordProductionsFromLexiconFile(filePath: string, word: string): Production[] {
+  const wordProductions: Production[] = []
   const liner = new LineByLine(filePath)
 
   let line = liner.next()
 
   while (line) {
     const str = line.toString('ascii')
-    const [, rhs] = str.split(' ')
+    const [lhs, rhs, weight] = str.split(' ')
     if (rhs === word) {
-      wordProductions.push(str)
+      wordProductions.push({lhs, rhs, weight: parseFloat(weight)})
     }
     line = liner.next()
   }
-
   return wordProductions
 }
 
@@ -95,41 +112,75 @@ function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
   return allCombinations
 }
 
-function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFilePath: string): Set<string>[][] {
+// function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFilePath: string): Set<string>[][] {
+//   const words = sentence.split(' ')
+//   const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
+//   // Loop to get word production rules
+//   for (let i = 1; i <= words.length; i++) {
+//     // Loop to build the diagonal of the matrix
+//     words.forEach(() => {
+//       const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
+//       if (rules) {
+//         rules.forEach(r => {
+//           const [nonTerminal] = r.split(' ')
+//           matrix[i - 1][i].add(nonTerminal)
+//         })
+//       }
+//     })
+//   }
+
+//   for (let k = 2; k <= words.length; k++) {
+//     for (let i = k - 2; i >= 0; i--) {
+//       for (let j = i + 1; j <= k - 1; j++) {
+//         const bs: Set<string> = matrix[i][j]
+//         const cs: Set<string> = matrix[j][k]
+//         const allBCCombinations: string[] = getAllCombinations(bs, cs)
+//         allBCCombinations.forEach(rhs => {
+//           const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
+//           binaryProductions.forEach(production => matrix[i][k].add(production))
+//         })
+//       }
+//     }
+//   }
+//   console.log('Final Matrix: ')
+//   printMatrix(matrix)
+//   return matrix
+// }
+
+function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
   const words = sentence.split(' ')
-  const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
-  // Loop to get word production rules
+  const chart: BooleanChart = []
+  // chart[i][j][A] = true, if the signature (i,j,A) is already added to the chart
+  // chart[i][j][A] = false, otherwise
+
+  // // Loop to get word production rules
   for (let i = 1; i <= words.length; i++) {
     // Loop to build the diagonal of the matrix
-    words.forEach(() => {
-      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
-      if (rules) {
-        rules.forEach(r => {
-          const [nonTerminal] = r.split(' ')
-          matrix[i - 1][i].add(nonTerminal)
-        })
-      }
+
+    const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
+    rules.forEach(r => {
+      // const [nonTerminal] = r.split(' ')
+      // matrix[i - 1][i].add(nonTerminal)
     })
   }
 
-  for (let k = 2; k <= words.length; k++) {
-    for (let i = k - 2; i >= 0; i--) {
-      for (let j = i + 1; j <= k - 1; j++) {
-        const bs: Set<string> = matrix[i][j]
-        const cs: Set<string> = matrix[j][k]
-        const allBCCombinations: string[] = getAllCombinations(bs, cs)
-        allBCCombinations.forEach(rhs => {
-          const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
-          binaryProductions.forEach(production => matrix[i][k].add(production))
-        })
-      }
-    }
-  }
-  console.log('Final Matrix: ')
-  printMatrix(matrix)
-  return matrix
+  // for (let k = 2; k <= words.length; k++) {
+  //   for (let i = k - 2; i >= 0; i--) {
+  //     for (let j = i + 1; j <= k - 1; j++) {
+  //       const bs: Set<string> = matrix[i][j]
+  //       const cs: Set<string> = matrix[j][k]
+  //       const allBCCombinations: string[] = getAllCombinations(bs, cs)
+  //       allBCCombinations.forEach(rhs => {
+  //         const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
+  //         binaryProductions.forEach(production => matrix[i][k].add(production))
+  //       })
+  //     }
+  //   }
+  // }
+  // console.log('Final Matrix: ')
+  // printMatrix(matrix)
+  return chart
 }
-
 export default class Parse extends Command {
   // static description = 'describe the command here'
 
@@ -171,8 +222,8 @@ export default class Parse extends Command {
     console.log(`📝 Parsing ${sentence}`)
     // console.log(`args = ${JSON.stringify(args)}`)
     // console.log(`flags = ${JSON.stringify(flags)}`)
-    const g = Grammar.getInstance()
+    // const g = Grammar.getInstance()
 
-    cky(g, sentence, lexiconFilePath, rulesFilePath)
+    ckyChart(sentence, lexiconFilePath, rulesFilePath)
   }
 }
