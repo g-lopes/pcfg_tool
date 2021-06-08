@@ -101,7 +101,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFileP
   // Loop to get word production rules
   for (let i = 1; i <= words.length; i++) {
     // Loop to build the diagonal of the matrix
-    words.forEach(w => {
+    words.forEach(() => {
       const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1]) // TODO: check use of words[i-1] instead of w
       if (rules) {
         rules.forEach(r => {
