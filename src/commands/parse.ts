@@ -102,7 +102,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFileP
   for (let i = 1; i <= words.length; i++) {
     // Loop to build the diagonal of the matrix
     words.forEach(() => {
-      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1]) // TODO: check use of words[i-1] instead of w
+      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
       if (rules) {
         rules.forEach(r => {
           const [nonTerminal] = r.split(' ')
@@ -111,7 +111,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFileP
       }
     })
   }
-  // Loop to .... TODO: fix loops
+
   for (let k = 2; k <= words.length; k++) {
     for (let i = k - 2; i >= 0; i--) {
       for (let j = i + 1; j <= k - 1; j++) {
