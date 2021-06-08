@@ -1,4 +1,5 @@
-import {getWordProductionsFromLexiconFile, Production} from '../src/commands/parse'
+/* eslint-disable quote-props */
+import {getWordProductionsFromLexiconFile, Production, initializeChart, BooleanChart} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -22,6 +23,20 @@ test('getWordProductionsFromLexiconFile should return empty array', () => {
   const productions: Production[] = getWordProductionsFromLexiconFile(filePath, word)
   const expectedProductions: Production[] = []
   expect(productions).toEqual(expectedProductions)
+})
+
+test('initializeChart', () => {
+  const sentence = 'book the flight through Houston'
+  const filePath = path.join(__dirname, './data/cky_example.lexicon')
+  const chart: BooleanChart = initializeChart(sentence, filePath)
+  const expectedChart: BooleanChart = [
+    [undefined, {'N': true, 'V': true}, undefined, undefined, undefined, undefined],
+    [undefined, undefined, {'Det': true}, undefined, undefined, undefined],
+    [undefined, undefined, undefined, {'N': true}, undefined, undefined],
+    [undefined, undefined, undefined, undefined, {'Prep': true}, undefined],
+    [undefined, undefined, undefined, undefined, undefined, {'N': true}],
+  ]
+  expect(expectedChart).toEqual(chart)
 })
 
 // TODO: if not used, then remove comment below
