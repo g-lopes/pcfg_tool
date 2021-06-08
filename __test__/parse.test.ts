@@ -1,4 +1,3 @@
-/* eslint-disable quote-props */
 import {getWordProductionsFromLexiconFile, Production, initializeChart, BooleanChart} from '../src/commands/parse'
 import * as path from 'path'
 
@@ -30,11 +29,11 @@ test('initializeChart', () => {
   const filePath = path.join(__dirname, './data/cky_example.lexicon')
   const chart: BooleanChart = initializeChart(sentence, filePath)
   const expectedChart: BooleanChart = [
-    [undefined, {'N': true, 'V': true}, undefined, undefined, undefined, undefined],
-    [undefined, undefined, {'Det': true}, undefined, undefined, undefined],
-    [undefined, undefined, undefined, {'N': true}, undefined, undefined],
-    [undefined, undefined, undefined, undefined, {'Prep': true}, undefined],
-    [undefined, undefined, undefined, undefined, undefined, {'N': true}],
+    [undefined, {N: true, V: true}, undefined, undefined, undefined, undefined],
+    [undefined, undefined, {Det: true}, undefined, undefined, undefined],
+    [undefined, undefined, undefined, {N: true}, undefined, undefined],
+    [undefined, undefined, undefined, undefined, {Prep: true}, undefined],
+    [undefined, undefined, undefined, undefined, undefined, {N: true}],
   ]
   expect(expectedChart).toEqual(chart)
 })
