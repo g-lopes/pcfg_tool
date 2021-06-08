@@ -1,0 +1,11 @@
+S -> NP VP 0.8
+S -> X1 VP 0.1
+S -> Verb NP 0.05
+S -> VP PP 0.03
+X1 -> Aux NP 1.0
+NP -> Det Nominal 0.6
+Nominal -> Nominal Noun 0.2
+Nominal -> Nominal PP 0.5
+VP -> Verb NP 0.5
+VP -> VP PP 0.3
+PP -> Prep NP 1.0
