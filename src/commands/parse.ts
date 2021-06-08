@@ -3,21 +3,20 @@ import {Command} from '@oclif/command'
 import {Grammar} from '../grammar'
 import LineByLine = require('n-readlines')
 
-function initializeMatrix(m: number, n: number): Set<string>[][]{
+function initializeMatrix(m: number, n: number): Set<string>[][] {
   const matrix: Set<string>[][] = []
-  for(let i = 0; i < m; i++){
+  for (let i = 0; i < m; i++) {
     matrix[i] = []
-    for(let j = 0; j < n + 1; j++){
+    for (let j = 0; j < n + 1; j++) {
       matrix[i][j] = new Set()
     }
-
   }
   return matrix
 }
 
 function printMatrix(matrix: Array<Array<Set<string>>>): void {
   let header = ''
-  for(let i = 0; i < matrix.length + 1; i++) {
+  for (let i = 0; i < matrix.length + 1; i++) {
     header = header + '        ' + i + '     '
   }
   console.log(header)
@@ -32,13 +31,13 @@ function printMatrix(matrix: Array<Array<Set<string>>>): void {
           element = element + e + ' , '
         })
       }
-      if(element.endsWith(', ')) {
+      if (element.endsWith(', ')) {
         element = element.substr(0, element.length - 2)
       }
-      while(element.length < 12) {
-        element = element + ' '
+      while (element.length < 12) {
+        element += ' '
       }
-      element = element + ']'
+      element += ']'
       row = row + ' ' + element
     }
     console.log(row)
@@ -50,14 +49,15 @@ function getWordProductionsFromLexiconFile(filePath: string, word: string): stri
   const wordProductions: string[] = []
   const liner = new LineByLine(filePath)
 
-  let line
+  let line = liner.next()
 
-  while (line = liner.next()) {
+  while (line) {
     const str = line.toString('ascii')
-    const [lhs, rhs, weight] = str.split(' ')
+    const [, rhs] = str.split(' ')
     if (rhs === word) {
       wordProductions.push(str)
     }
+    line = liner.next()
   }
 
   return wordProductions
@@ -67,11 +67,11 @@ function getBinaryProductionsFromRulesFile(filePath: string, binaryProduction: s
   const binaryProductions: string[] = []
   const liner = new LineByLine(filePath)
 
-  let line
+  let line = liner.next()
 
-  while (line = liner.next()) {
+  while (line) {
     const str = line.toString('ascii')
-    const regex = /(?<lhs>.*) -> (?<rhs>.*) ([0-9]*).([0-9]*)/
+    const regex = /(?<lhs>.*) -> (?<rhs>.*) (\d*).(\d*)/
     const matches = str.match(regex)
     const rhs = (matches as RegExpMatchArray).groups!.rhs
     const lhs: string = (matches as RegExpMatchArray).groups!.lhs
@@ -79,6 +79,7 @@ function getBinaryProductionsFromRulesFile(filePath: string, binaryProduction: s
     if (binaryProduction === rhs) {
       binaryProductions.push(lhs)
     }
+    line = liner.next()
   }
 
   return binaryProductions
@@ -101,10 +102,10 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFileP
   for (let i = 1; i <= words.length; i++) {
     // Loop to build the diagonal of the matrix
     words.forEach(w => {
-      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i-1]) //TODO: check use of words[i-1] instead of w
+      const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1]) // TODO: check use of words[i-1] instead of w
       if (rules) {
         rules.forEach(r => {
-          const [nonTerminal, terminal, weight] = r.split(' ')
+          const [nonTerminal] = r.split(' ')
           matrix[i - 1][i].add(nonTerminal)
         })
       }
@@ -113,7 +114,7 @@ function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFileP
   // Loop to .... TODO: fix loops
   for (let k = 2; k <= words.length; k++) {
     for (let i = k - 2; i >= 0; i--) {
-      for(let j = i + 1; j <= k - 1; j++) {
+      for (let j = i + 1; j <= k - 1; j++) {
         const bs: Set<string> = matrix[i][j]
         const cs: Set<string> = matrix[j][k]
         const allBCCombinations: string[] = getAllCombinations(bs, cs)
