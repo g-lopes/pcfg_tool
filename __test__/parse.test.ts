@@ -1,4 +1,4 @@
-import {getWordProductionsFromLexiconFile, Production, initializeChart, getAllNonterminals, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
+import {getWordProductionsFromLexiconFile, ckyChartBoolean, Production, initializeChart, getAllNonterminals, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -82,6 +82,21 @@ test('getAllNonterminals not expect nonterminal of the RHS', () => {
   expect(nonTerminals).toEqual(
     expect.not.arrayContaining(['Det']),
   )
+})
+
+test('ckyChartBoolean', () => {
+  const rulesFilePath = path.join(__dirname, './data/cnf_grammar.rules')
+  const lexiconFilePath = path.join(__dirname, './data/cnf_grammar.lexicon')
+  const sentence = 'book the flight through Houston'
+  const chart: BooleanChart = ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
+  const expectedChart: BooleanChart = [
+    [{}, {S: true, Nominal: true, Verb: true}, {}, {S: true, VP: true}, {}, {S: true, VP: true}],
+    [{}, {}, {Det: true}, {NP: true}, {}, {NP: true}],
+    [{}, {}, {}, {Nominal: true}, {}, {Nominal: true}],
+    [{}, {}, {}, {}, {Prep: true}, {PP: true}],
+    [{}, {}, {}, {}, {}, {NP: true}],
+  ]
+  expect(chart).toEqual(expectedChart)
 })
 
 // TODO: if not used, then remove comment below

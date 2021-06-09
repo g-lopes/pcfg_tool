@@ -205,7 +205,14 @@ export function getAllNonterminals(rulesFilePath: string): string[] {
   return [...set] // transforms set into array
 }
 
-function ckyChartBoolean(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
+/**
+ * Reads each line of a .rules file and returns all nonterminals that appear on the LHS
+ * @param {string} sentence - Sentence to be parsed using CYK
+ * @param {string} lexiconFilePath - Path of the .lexicon file
+ * @param {string} rulesFilePath - Path of the .rules file
+ * @returns {BooleanChart} BooleanChart
+ */
+export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
   const chart: BooleanChart = initializeChart(sentence, lexiconFilePath)
   const words = sentence.split(' ')
 
