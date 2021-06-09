@@ -200,28 +200,31 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
   const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath)
   const words = sentence.split(' ')
 
-  // for (let r = 2; r <= words.length; r++) { // length of the span
-  //   for (let i = 0; i <= words.length - r; i++) {
-  //     const j = i + r
+  for (let r = 2; r <= words.length; r++) { // length of the span
+    for (let i = 0; i <= words.length - r; i++) {
+      const j = i + r
 
-  //     const allNonTerminals = getAllNonterminals(rulesFilePath)
-  //     allNonTerminals.forEach(nt => {
-  //       for (let m = i + 1; m <= j - 1; m++) {
-  //         const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
-  //         allBinaryRules.forEach(r => {
-  //           const {lhs, rhs} = r /** weight is available as 3rd property if needed */
-  //           const [B, C] = rhs.split(' ')
-  //           const A = lhs
-  //           if (chart[i][m]![B] && chart[m][j]![C]) {
-  //             // updateFunction should be here
-  //             const ruleWeight: number = getRuleWeight(r)
-  //             chart[i][j]![A] = Math.max(chart[i][j]![A], ruleWeight)
-  //           }
-  //         })
-  //       }
-  //     })
-  //   }
-  // }
+      const allNonTerminals = getAllNonterminals(rulesFilePath)
+      allNonTerminals.forEach(nt => {
+        for (let m = i + 1; m <= j - 1; m++) {
+          const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
+          allBinaryRules.forEach(r => {
+            const {lhs, rhs, weight} = r /** weight is available as 3rd property if needed */
+            const [B, C] = rhs.split(' ')
+            const A = lhs
+            if (chart[i][m]![B] && chart[m][j]![C]) {
+              // updateFunction
+              const ruleWeight: number = chart[i][m]![B] * chart[m][j]![C] * weight
+              if (!chart[i][j][A]) {
+                chart[i][j][A] = 0
+              }
+              chart[i][j]![A] = Math.max(chart[i][j]![A], ruleWeight)
+            }
+          })
+        }
+      })
+    }
+  }
 
   return chart
 }

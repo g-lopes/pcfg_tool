@@ -1,4 +1,5 @@
-import {getWordProductionsFromLexiconFile,
+import {
+  getWordProductionsFromLexiconFile,
   initializeWeightChart,
   ckyChartBoolean,
   Production,
@@ -6,7 +7,9 @@ import {getWordProductionsFromLexiconFile,
   getAllNonterminals,
   BooleanChart,
   getBinaryProductionsFromRulesFile,
-  WeightChart} from '../src/commands/parse'
+  WeightChart,
+  ckyChartWeight,
+} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -121,12 +124,39 @@ test('initializeWeightChart', () => {
   expect(chart).toEqual(expectedChart)
 })
 
-// TODO: if not used, then remove comment below
-// const expectedProductions: Production[] = [
-//   {lhs: 'N', rhs: 'book', weight: 0.5},
-//   {lhs: 'N', rhs: 'flight', weight: 0.4},
-//   {lhs: 'N', rhs: 'Houston', weight: 0.1},
-//   {lhs: 'V', rhs: 'book', weight: 1},
-//   {lhs: 'Det', rhs: 'the', weight: 1},
-//   {lhs: 'Prep', rhs: 'through', weight: 1},
-// ]
+//
+test('ckyChartBoolean', () => {
+  const rulesFilePath = path.join(__dirname, './data/cnf_grammar.rules')
+  const lexiconFilePath = path.join(__dirname, './data/cnf_grammar.lexicon')
+  const sentence = 'book the flight through Houston'
+  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const expectedChart: WeightChart = [
+    [{}, {S: 0.01, Nominal: 0.03, Verb: 0.5}, {}, {S: 0.00135, VP: 0.0135}, {}, {S: 0.000021599999999999996, VP: 0.00021599999999999996}],
+    [{}, {}, {Det: 0.6}, {NP: 0.054}, {}, {NP: 0.0008639999999999999}],
+    [{}, {}, {}, {Nominal: 0.15}, {}, {Nominal: 0.0024}],
+    [{}, {}, {}, {}, {Prep: 0.2}, {PP: 0.032}],
+    [{}, {}, {}, {}, {}, {NP: 0.16}],
+  ]
+  expect(chart).toEqual(expectedChart)
+})
+
+test('ckyChartWeight', () => {
+  const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
+  const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
+  const sentence = 'the man saw the dog'
+  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const expectedChart: WeightChart = [
+    [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
+    [{}, {}, {NN: 0.1}, {}, {}, {}],
+    [{}, {}, {}, {Vt: 1}, {}, {VP: 0.32}],
+    [{}, {}, {}, {}, {DT: 1}, {NP: 0.4}],
+    [{}, {}, {}, {}, {}, {NN: 0.5}],
+  ]
+  for (let i = 0; i < chart.length; i++) {
+    for (let j = 0; j < chart[i].length; j++) {
+      for (const [key] of Object.entries(chart[i][j])) {
+        expect(chart[i][j][key]).toBeCloseTo(expectedChart[i][j][key])
+      }
+    }
+  }
+})
