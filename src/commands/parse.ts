@@ -216,18 +216,18 @@ function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: stri
     for (let i = 0; i <= words.length - r; i++) {
       const j = i + r
 
-      const allNonTerminals = [] // TODO: implement method to get all nt
-      // allNonTerminals.forEach(nt => {
-      //   for (let m = i + 1; m <= j - 1; m++) {
-      //     const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
-      //     allBinaryRules.forEach(r => {
-      //       const {lhs, rhs, weight} = r
-      //       const [B, C] = rhs.split(' ')
-      //       const A = lhs
-      //       if (chart[i][j][B] && chart[m][j][C]) chart[i][j][A] = true
-      //     })
-      //   }
-      // })
+      const allNonTerminals = getAllNonterminals(rulesFilePath)
+      allNonTerminals.forEach(nt => {
+        for (let m = i + 1; m <= j - 1; m++) {
+          const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
+          allBinaryRules.forEach(r => {
+            const {lhs, rhs} = r /** weight is available as 3rd property if needed */
+            const [B, C] = rhs.split(' ')
+            const A = lhs
+            if (chart[i][j][B] && chart[m][j][C]) chart[i][j][A] = true
+          })
+        }
+      })
 
       // const bs: Set<string> = matrix[i][j]
       // const cs: Set<string> = matrix[j][k]
@@ -240,5 +240,52 @@ function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: stri
   }
 
   return chart
+}
+
+export default class Parse extends Command {
+  // static description = 'describe the command here'
+
+  //   static examples = [
+  //     `$ pcfg_tool hello
+  // hello world from ./src/hello.ts!
+  // `,
+  //   ]
+
+  // static flags = {
+  //   help: flags.help({char: 'h'}),
+  //   // flag with a value (-n, --name=VALUE)
+  //   name: flags.string({char: 'n', description: 'name to print'}),
+  //   // flag with no value (-f, --force)
+  //   force: flags.boolean({char: 'f'}),
+  // }
+
+  static args = [
+    {
+      name: 'rulesFilePath',
+      required: false,
+      description: 'Path of rules file',
+    },
+    {
+      name: 'lexiconFilePath',
+      required: false,
+      description: 'Path of lexicon file',
+    },
+    {
+      name: 'sentence',
+      required: false,
+      description: 'Sentence to be parsed',
+    },
+  ];
+
+  async run() {
+    const {args} = this.parse(Parse)
+    const {rulesFilePath, lexiconFilePath, sentence} = args
+    console.log(`📝 Parsing ${sentence}`)
+    // console.log(`args = ${JSON.stringify(args)}`)
+    // console.log(`flags = ${JSON.stringify(flags)}`)
+    // const g = Grammar.getInstance()
+
+    ckyChart(sentence, lexiconFilePath, rulesFilePath)
+  }
 }
 
