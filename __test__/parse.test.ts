@@ -1,4 +1,4 @@
-import {getWordProductionsFromLexiconFile, Production, initializeChart, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
+import {getWordProductionsFromLexiconFile, Production, initializeChart, getAllNonterminals, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -67,6 +67,21 @@ test('getBinaryProductionsFromRulesFile', () => {
   const binaryProductions: Production[] = getBinaryProductionsFromRulesFile(rulesFilePath, lhs)
   const expectedBinaryProductions: Production[] = []
   expect(binaryProductions).toEqual(expectedBinaryProductions)
+})
+
+test('getAllNonterminals', () => {
+  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
+  const nonTerminals: string[] = getAllNonterminals(rulesFilePath)
+  const expectedNonTerminals: string[] = ['S', 'NP', 'VP', 'PP']
+  expect(nonTerminals).toEqual(expectedNonTerminals)
+})
+
+test('getAllNonterminals not expect nonterminal of the RHS', () => {
+  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
+  const nonTerminals: string[] = getAllNonterminals(rulesFilePath)
+  expect(nonTerminals).toEqual(
+    expect.not.arrayContaining(['Det']),
+  )
 })
 
 // TODO: if not used, then remove comment below

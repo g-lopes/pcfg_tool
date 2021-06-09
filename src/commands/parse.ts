@@ -83,7 +83,7 @@ export function getWordProductionsFromLexiconFile(filePath: string, word: string
 /**
  * @param {string} rulesFilePath - Path of the .lexicon file
  * @param {string} nonTerminal - Nonterminal which is on the lhs
- * @returns {Production[]} All production rules yielded by lhs with twp nonterminals on the rhs
+ * @returns {Production[]} All production rules yielded by lhs with two nonterminals on the rhs
  */
 export function getBinaryProductionsFromRulesFile(rulesFilePath: string, nonTerminal: string): Production[] {
   const binaryProductions: Production[] = []
@@ -183,6 +183,31 @@ export function initializeChart(sentence: string, lexiconFilePath: string): Bool
   return chart
 }
 
+/**
+ * Reads each line of a .rules file and returns all nonterminals that appear on the LHS
+ * @param {string} rulesFilePath - Path of the .rules file
+ * @returns {string[]} All nonterminals on that appear on the LHS
+ */
+export function getAllNonterminals(rulesFilePath: string): string[] {
+  const set = new Set<string>()
+  const liner = new LineByLine(rulesFilePath)
+
+  let line = liner.next()
+
+  while (line) {
+    const str = line.toString('ascii')
+    const regex = /(?<nt>.*) -> .*/
+    const matches = str.match(regex)
+    if (matches && matches.groups) {
+      const {nt} = matches.groups
+      set.add(nt)
+    }
+    line = liner.next()
+  }
+
+  return [...set] // transforms set into array
+}
+
 function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
   const chart: BooleanChart = initializeChart(sentence, lexiconFilePath)
   const words = sentence.split(' ')
@@ -191,13 +216,15 @@ function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: stri
     for (let i = 0; i <= words.length - r; i++) {
       const j = i + r
 
-      // const allNonTerminals = [] // TODO: implement method to get all nt
+      const allNonTerminals = [] // TODO: implement method to get all nt
       // allNonTerminals.forEach(nt => {
       //   for (let m = i + 1; m <= j - 1; m++) {
-      //     const allBinaryRules = getAllBinaryRules(nt)
+      //     const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
       //     allBinaryRules.forEach(r => {
-      //       const {a, b, c} = r
-      //       if (chart[i][j][b] && chart[m][j][c]) chart[i][j][a] = true
+      //       const {lhs, rhs, weight} = r
+      //       const [B, C] = rhs.split(' ')
+      //       const A = lhs
+      //       if (chart[i][j][B] && chart[m][j][C]) chart[i][j][A] = true
       //     })
       //   }
       // })
