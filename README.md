@@ -68,3 +68,7 @@ OPTIONS
 
 _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.2/src/commands/help.ts)_
 <!-- commandsstop -->
+
+# Regex:
+(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>[0-9].[0-9]*) - recognizes unary rules inside .rules files
+(?<lhs>.*) -> (?<rhs>.* .*) (?<weight>[0-9].*]*) - recognizes binary rules inside .rules files 
