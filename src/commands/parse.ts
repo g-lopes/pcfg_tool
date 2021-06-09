@@ -71,6 +71,31 @@ export function getBinaryProductionsFromRulesFile(rulesFilePath: string, nonTerm
 }
 
 /**
+ * @param {string} rulesFilePath - Path of the .lexicon file
+ * @param {string} nonTerminal - Nonterminal which is on the lhs
+ * @returns {Production[]} All production rules yielded by lhs with two nonterminals on the rhs
+ */
+export function getAllUnaryProductionsFromRulesFile(rulesFilePath: string): Production[] {
+  const unaryProductions: Production[] = []
+  const liner = new LineByLine(rulesFilePath)
+
+  let line = liner.next()
+
+  while (line) {
+    const str = line.toString('ascii')
+    const regex = /(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>\d.*]*)/
+    const matches = str.match(regex)
+    if (matches && matches.groups) {
+      const {lhs, rhs, weight} = matches.groups
+      unaryProductions.push({lhs, rhs, weight: parseFloat(weight)})
+    }
+    line = liner.next()
+  }
+
+  return unaryProductions
+}
+
+/**
  * Given a sentence, returns a BooleanChart initialized with the words of the sentence
  * @param {string} sentence - Word (terminal) that we want to find production rules for
  * @param {string} lexiconFilePath - Path of the .lexicon file
@@ -230,7 +255,7 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
         let again = true
         while (again) {
           again = false
-          const unaryRules: Production[] = getAllUnaryRules()
+          const unaryRules: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
           unaryRules.forEach(r => {
             const {lhs, rhs, weight} = r
             if (!chart[i][j][lhs] && chart[i][j][rhs]) {

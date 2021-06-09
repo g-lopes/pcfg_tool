@@ -9,6 +9,7 @@ import {
   getBinaryProductionsFromRulesFile,
   WeightChart,
   ckyChartWeight,
+  getAllUnaryProductionsFromRulesFile,
 } from '../src/commands/parse'
 import * as path from 'path'
 
@@ -159,4 +160,40 @@ test('ckyChartWeight', () => {
       }
     }
   }
+})
+
+test('ckyChartWeight with unary rules', () => {
+  const rulesFilePath = path.join(__dirname, './data/simple_pcfg.rules')
+  const lexiconFilePath = path.join(__dirname, './data/simple_pcfg.lexicon')
+  const sentence = 'the man saw the dog'
+  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const expectedChart: WeightChart = [
+    [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
+    [{}, {}, {NN: 0.1}, {}, {}, {}],
+    [{}, {}, {}, {Vt: 1}, {}, {VP: 0.32}],
+    [{}, {}, {}, {}, {DT: 1}, {NP: 0.4}],
+    [{}, {}, {}, {}, {}, {NN: 0.5}],
+  ]
+  for (let i = 0; i < chart.length; i++) {
+    for (let j = 0; j < chart[i].length; j++) {
+      for (const [key] of Object.entries(chart[i][j])) {
+        console.log(key)
+        // expect(chart[i][j][key]).toBeCloseTo(expectedChart[i][j][key])
+      }
+    }
+  }
+  expect(1).toBe(0)
+})
+
+test('getAllUnaryProductionsFromRulesFile', () => {
+  const rulesFilePath = path.join(__dirname, './data/simple_pcfg.rules')
+  const unaryRules: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
+  const expectedUnaryRules: Production[] = [
+    {lhs: 'NP', rhs: 'Noun', weight: 0.2},
+    {lhs: 'VP', rhs: 'Verb', weight: 0.3},
+    {lhs: 'Prep', rhs: 'P', weight: 1},
+    {lhs: 'Noun', rhs: 'N', weight: 1},
+    {lhs: 'Verb', rhs: 'V', weight: 1},
+  ]
+  expect(unaryRules).toEqual(expectedUnaryRules)
 })
