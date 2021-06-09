@@ -1,4 +1,4 @@
-import {getWordProductionsFromLexiconFile, Production, initializeChart, BooleanChart} from '../src/commands/parse'
+import {getWordProductionsFromLexiconFile, Production, initializeChart, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -35,7 +35,38 @@ test('initializeChart', () => {
     [undefined, undefined, undefined, undefined, {Prep: true}, undefined],
     [undefined, undefined, undefined, undefined, undefined, {N: true}],
   ]
-  expect(expectedChart).toEqual(chart)
+  expect(chart).toEqual(expectedChart)
+})
+
+test('getBinaryProductionsFromRulesFile', () => {
+  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
+  const lhs = 'VP'
+  const binaryProductions: Production[] = getBinaryProductionsFromRulesFile(rulesFilePath, lhs)
+  const expectedBinaryProductions: Production[] = [
+    {lhs: 'VP', rhs: 'VP PP', weight: 0.3},
+    {lhs: 'VP', rhs: 'VP NP', weight: 0.6},
+  ]
+  expect(binaryProductions).toEqual(expectedBinaryProductions)
+})
+
+test('getBinaryProductionsFromRulesFile', () => {
+  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
+  const lhs = 'NP'
+  const binaryProductions: Production[] = getBinaryProductionsFromRulesFile(rulesFilePath, lhs)
+  const expectedBinaryProductions: Production[] = [
+    {lhs: 'NP', rhs: 'Det N', weight: 0.4},
+    {lhs: 'NP', rhs: 'NP NP', weight: 0.1},
+    {lhs: 'NP', rhs: 'NP PP', weight: 0.2},
+  ]
+  expect(binaryProductions).toEqual(expectedBinaryProductions)
+})
+
+test('getBinaryProductionsFromRulesFile', () => {
+  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
+  const lhs = 'OnlyUnary'
+  const binaryProductions: Production[] = getBinaryProductionsFromRulesFile(rulesFilePath, lhs)
+  const expectedBinaryProductions: Production[] = []
+  expect(binaryProductions).toEqual(expectedBinaryProductions)
 })
 
 // TODO: if not used, then remove comment below
