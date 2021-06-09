@@ -205,7 +205,7 @@ export function getAllNonterminals(rulesFilePath: string): string[] {
   return [...set] // transforms set into array
 }
 
-function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
+function ckyChartBoolean(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
   const chart: BooleanChart = initializeChart(sentence, lexiconFilePath)
   const words = sentence.split(' ')
 
@@ -221,18 +221,10 @@ function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: stri
             const {lhs, rhs} = r /** weight is available as 3rd property if needed */
             const [B, C] = rhs.split(' ')
             const A = lhs
-            if (chart[i][j]![B] && chart[m][j]![C]) chart[i][j]![A] = true
+            if (chart[i][m]![B] && chart[m][j]![C]) chart[i][j]![A] = true
           })
         }
       })
-
-      // const bs: Set<string> = matrix[i][j]
-      // const cs: Set<string> = matrix[j][k]
-      // const allBCCombinations: string[] = getAllCombinations(bs, cs)
-      // allBCCombinations.forEach(rhs => {
-      //   const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
-      //   binaryProductions.forEach(production => matrix[i][k].add(production))
-      // })
     }
   }
 
@@ -282,7 +274,7 @@ export default class Parse extends Command {
     // console.log(`flags = ${JSON.stringify(flags)}`)
     // const g = Grammar.getInstance()
 
-    ckyChart(sentence, lexiconFilePath, rulesFilePath)
+    ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
   }
 }
 
