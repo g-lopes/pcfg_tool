@@ -184,6 +184,17 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
 
 /**
  * //TODO: write something here
+ * @param {string} sentence - Sentence to be parsed using CYK
+ * @param {string} lexiconFilePath - Path of the .lexicon file
+ * @param {string} rulesFilePath - Path of the .rules file
+ * @returns {number} WeightChart
+ */
+export function unaryClosure(): number {
+  return -1
+}
+
+/**
+ * //TODO: write something here
  * //TODO: functions are really similar, do not repeat yourself
  * @param {string} sentence - Sentence to be parsed using CYK
  * @param {string} lexiconFilePath - Path of the .lexicon file
@@ -213,6 +224,18 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
                 chart[i][j][A] = 0
               }
               chart[i][j]![A] = Math.max(chart[i][j]![A], ruleWeight)
+            }
+          })
+        }
+        let again = true
+        while (again) {
+          again = false
+          const unaryRules: Production[] = getAllUnaryRules()
+          unaryRules.forEach(r => {
+            const {lhs, rhs, weight} = r
+            if (!chart[i][j][lhs] && chart[i][j][rhs]) {
+              chart[i][j][lhs] = weight
+              again = true
             }
           })
         }
