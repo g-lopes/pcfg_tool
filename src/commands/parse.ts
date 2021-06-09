@@ -165,16 +165,13 @@ export function initializeChart(sentence: string, lexiconFilePath: string): Bool
   for (let i = 0; i < words.length; i++) {
     chart[i] = []
     for (let j = 0; j <= words.length; j++) {
-      chart[i][j] = undefined
+      chart[i][j] = {}
     }
   }
   // Loop to get word production rules
   for (let i = 1; i <= words.length; i++) {
     // Loop to build the diagonal of the matrix
     const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
-    if (rules.length > 0) {
-      chart[i - 1][i] = {}
-    }
     rules.forEach(r => {
       const {lhs} = r
       chart[i - 1][i]![lhs] = true

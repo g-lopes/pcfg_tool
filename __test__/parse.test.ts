@@ -29,11 +29,11 @@ test('initializeChart', () => {
   const filePath = path.join(__dirname, './data/cky_example.lexicon')
   const chart: BooleanChart = initializeChart(sentence, filePath)
   const expectedChart: BooleanChart = [
-    [undefined, {N: true, V: true}, undefined, undefined, undefined, undefined],
-    [undefined, undefined, {Det: true}, undefined, undefined, undefined],
-    [undefined, undefined, undefined, {N: true}, undefined, undefined],
-    [undefined, undefined, undefined, undefined, {Prep: true}, undefined],
-    [undefined, undefined, undefined, undefined, undefined, {N: true}],
+    [{}, {N: true, V: true}, {}, {}, {}, {}],
+    [{}, {}, {Det: true}, {}, {}, {}],
+    [{}, {}, {}, {N: true}, {}, {}],
+    [{}, {}, {}, {}, {Prep: true}, {}],
+    [{}, {}, {}, {}, {}, {N: true}],
   ]
   expect(chart).toEqual(expectedChart)
 })
