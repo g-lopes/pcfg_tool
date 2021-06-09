@@ -62,8 +62,8 @@ test('getBinaryProductionsFromRulesFile', () => {
 })
 
 test('getBinaryProductionsFromRulesFile', () => {
-  const rulesFilePath = path.join(__dirname, './data/cky_example.rules')
-  const lhs = 'OnlyUnary'
+  const rulesFilePath = path.join(__dirname, './data/only_unary.rules')
+  const lhs = 'D'
   const binaryProductions: Production[] = getBinaryProductionsFromRulesFile(rulesFilePath, lhs)
   const expectedBinaryProductions: Production[] = []
   expect(binaryProductions).toEqual(expectedBinaryProductions)
