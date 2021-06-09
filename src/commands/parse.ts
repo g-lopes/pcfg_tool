@@ -5,11 +5,11 @@ import LineByLine = require('n-readlines')
 /**
  * @type {BooleanChart} 2D matrix of objects
  */
-export type BooleanChart = ({[lhs: string]: boolean} | undefined)[][];
+export type BooleanChart = ({[lhs: string]: boolean})[][];
 /**
  * @type {WeightChart} 2D matrix of objects
  */
-export type WeightChart = ({[lhs: string]: number} | undefined)[][];
+export type WeightChart = ({[lhs: string]: number})[][];
 
 /**
  * @interface {string} filePath - Path of the .lexicon file
@@ -117,8 +117,8 @@ export function initializeWeightChart(sentence: string, lexiconFilePath: string)
     // Loop to build the diagonal of the matrix
     const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
     rules.forEach(r => {
-      const {lhs} = r
-      chart[i - 1][i]![lhs] = -1
+      const {lhs, weight} = r
+      chart[i - 1][i]![lhs] = weight
     })
   }
   return chart
@@ -182,6 +182,12 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
   return chart
 }
 
+// TODO: implement
+// function getRuleWeight(r: string): number {
+
+//   return Math.max()
+// }
+
 /**
  * //TODO: write something here
  * //TODO: functions are really similar, do not repeat yourself
@@ -194,24 +200,28 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
   const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath)
   const words = sentence.split(' ')
 
-  for (let r = 2; r <= words.length; r++) { // length of the span
-    for (let i = 0; i <= words.length - r; i++) {
-      const j = i + r
+  // for (let r = 2; r <= words.length; r++) { // length of the span
+  //   for (let i = 0; i <= words.length - r; i++) {
+  //     const j = i + r
 
-      const allNonTerminals = getAllNonterminals(rulesFilePath)
-      allNonTerminals.forEach(nt => {
-        for (let m = i + 1; m <= j - 1; m++) {
-          const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
-          allBinaryRules.forEach(r => {
-            const {lhs, rhs} = r /** weight is available as 3rd property if needed */
-            const [B, C] = rhs.split(' ')
-            const A = lhs
-            if (chart[i][m]![B] && chart[m][j]![C]) chart[i][j]![A] = -1
-          })
-        }
-      })
-    }
-  }
+  //     const allNonTerminals = getAllNonterminals(rulesFilePath)
+  //     allNonTerminals.forEach(nt => {
+  //       for (let m = i + 1; m <= j - 1; m++) {
+  //         const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
+  //         allBinaryRules.forEach(r => {
+  //           const {lhs, rhs} = r /** weight is available as 3rd property if needed */
+  //           const [B, C] = rhs.split(' ')
+  //           const A = lhs
+  //           if (chart[i][m]![B] && chart[m][j]![C]) {
+  //             // updateFunction should be here
+  //             const ruleWeight: number = getRuleWeight(r)
+  //             chart[i][j]![A] = Math.max(chart[i][j]![A], ruleWeight)
+  //           }
+  //         })
+  //       }
+  //     })
+  //   }
+  // }
 
   return chart
 }
@@ -259,7 +269,8 @@ export default class Parse extends Command {
     // console.log(`flags = ${JSON.stringify(flags)}`)
     // const g = Grammar.getInstance()
 
-    ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
+    // ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
+    ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   }
 }
 

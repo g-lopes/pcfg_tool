@@ -1,4 +1,12 @@
-import {getWordProductionsFromLexiconFile, ckyChartBoolean, Production, initializeChart, getAllNonterminals, BooleanChart, getBinaryProductionsFromRulesFile} from '../src/commands/parse'
+import {getWordProductionsFromLexiconFile,
+  initializeWeightChart,
+  ckyChartBoolean,
+  Production,
+  initializeChart,
+  getAllNonterminals,
+  BooleanChart,
+  getBinaryProductionsFromRulesFile,
+  WeightChart} from '../src/commands/parse'
 import * as path from 'path'
 
 test('basic', () => {
@@ -95,6 +103,20 @@ test('ckyChartBoolean', () => {
     [{}, {}, {}, {Nominal: true}, {}, {Nominal: true}],
     [{}, {}, {}, {}, {Prep: true}, {PP: true}],
     [{}, {}, {}, {}, {}, {NP: true}],
+  ]
+  expect(chart).toEqual(expectedChart)
+})
+
+test('initializeWeightChart', () => {
+  const sentence = 'book the flight through Houston'
+  const filePath = path.join(__dirname, './data/cky_example.lexicon')
+  const chart: WeightChart = initializeWeightChart(sentence, filePath)
+  const expectedChart: WeightChart = [
+    [{}, {N: 0.5, V: 1}, {}, {}, {}, {}],
+    [{}, {}, {Det: 1}, {}, {}, {}],
+    [{}, {}, {}, {N: 0.4}, {}, {}],
+    [{}, {}, {}, {}, {Prep: 1}, {}],
+    [{}, {}, {}, {}, {}, {N: 0.1}],
   ]
   expect(chart).toEqual(expectedChart)
 })
