@@ -73,3 +73,4 @@ _See code: [@oclif/plugin-help](https://github.com/oclif/plugin-help/blob/v3.2.2
 /(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>[0-9].[0-9]*)/ - recognizes unary rules inside .rules files
 /(?<lhs>.*) -> (?<rhs>.* .*) (?<weight>[0-9].*]*)/ - recognizes binary rules inside .rules files
 /(?<nt>.*) -> .*/ - matches the lhs of a rule
+/(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>\d.*]*)/ - matches unary productions A -> B w
