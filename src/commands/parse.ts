@@ -16,48 +16,6 @@ export interface Production {
   weight: number;
 }
 
-// function initializeMatrix(m: number, n: number): Set<string>[][] {
-//   const matrix: Set<string>[][] = []
-//   for (let i = 0; i < m; i++) {
-//     matrix[i] = []
-//     for (let j = 0; j < n + 1; j++) {
-//       matrix[i][j] = new Set()
-//     }
-//   }
-//   return matrix
-// }
-
-// function printMatrix(matrix: Array<Array<Set<string>>>): void {
-//   let header = ''
-//   for (let i = 0; i < matrix.length + 1; i++) {
-//     header = header + '        ' + i + '     '
-//   }
-//   console.log(header)
-//   for (let i = 0; i < matrix.length; i++) {
-//     // new row
-//     let row = i + ' '
-//     for (let j = 0; j < matrix[i].length; j++) {
-//       // new element
-//       let element = '['
-//       if (matrix[i][j].size > 0) {
-//         matrix[i][j].forEach(e => {
-//           element = element + e + ' , '
-//         })
-//       }
-//       if (element.endsWith(', ')) {
-//         element = element.substr(0, element.length - 2)
-//       }
-//       while (element.length < 12) {
-//         element += ' '
-//       }
-//       element += ']'
-//       row = row + ' ' + element
-//     }
-//     console.log(row)
-//   }
-//   console.log('\n')
-// }
-
 /**
  * @param {string} filePath - Path of the .lexicon file
  * @param {string} word - Word (terminal) that we want to find production rules for
