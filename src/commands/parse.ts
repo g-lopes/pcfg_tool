@@ -108,51 +108,6 @@ export function getBinaryProductionsFromRulesFile(rulesFilePath: string, nonTerm
   return binaryProductions
 }
 
-// function getAllCombinations(bs: Set<string>, cs: Set<string>): string[] {
-//   const allCombinations: string[] = []
-//   bs.forEach(b => {
-//     cs.forEach(c => {
-//       allCombinations.push(b + ' ' + c)
-//     })
-//   })
-//   return allCombinations
-// }
-
-// function cky(grammar: any, sentence: string, lexiconFilePath: string, rulesFilePath: string): Set<string>[][] {
-//   const words = sentence.split(' ')
-//   const matrix: Set<string>[][] = initializeMatrix(words.length, words.length)
-//   // Loop to get word production rules
-//   for (let i = 1; i <= words.length; i++) {
-//     // Loop to build the diagonal of the matrix
-//     words.forEach(() => {
-//       const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
-//       if (rules) {
-//         rules.forEach(r => {
-//           const [nonTerminal] = r.split(' ')
-//           matrix[i - 1][i].add(nonTerminal)
-//         })
-//       }
-//     })
-//   }
-
-//   for (let k = 2; k <= words.length; k++) {
-//     for (let i = k - 2; i >= 0; i--) {
-//       for (let j = i + 1; j <= k - 1; j++) {
-//         const bs: Set<string> = matrix[i][j]
-//         const cs: Set<string> = matrix[j][k]
-//         const allBCCombinations: string[] = getAllCombinations(bs, cs)
-//         allBCCombinations.forEach(rhs => {
-//           const binaryProductions = getBinaryProductionsFromRulesFile(rulesFilePath, rhs)
-//           binaryProductions.forEach(production => matrix[i][k].add(production))
-//         })
-//       }
-//     }
-//   }
-//   console.log('Final Matrix: ')
-//   printMatrix(matrix)
-//   return matrix
-// }
-
 /**
  * Given a sentence, returns a BooleanChart initialized with the words of the sentence
  * @param {string} sentence - Word (terminal) that we want to find production rules for
