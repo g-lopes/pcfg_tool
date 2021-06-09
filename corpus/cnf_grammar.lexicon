@@ -11,9 +11,6 @@ Nominal money 0.06
 Nominal meal 0.06
 Nominal flight 0.15
 Nominal book 0.03
-VP book 0.1
-VP include 0.04
-VP prefer 0.06
 Det the 0.6
 Det a 0.1
 Det an 0.05
