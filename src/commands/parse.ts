@@ -182,12 +182,6 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
   return chart
 }
 
-// TODO: implement
-// function getRuleWeight(r: string): number {
-
-//   return Math.max()
-// }
-
 /**
  * //TODO: write something here
  * //TODO: functions are really similar, do not repeat yourself

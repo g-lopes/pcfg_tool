@@ -1,0 +1,19 @@
+S -> NP VP 0.8
+S -> S ConjS 0.2
+ConjS -> conj S 1.0
+NP -> Noun 0.2
+NP -> Det Noun 0.4
+NP -> NP PP 0.2
+NP -> NP ConjNP 0.2
+ConjNP -> conj NP 1
+VP -> Verb 0.3
+VP -> Verb NP 0.3
+VP -> Verb NP NP 0.1
+VP -> Verb NPNP 0.1
+NPNP -> NP NP 1
+VP -> VP PP 0.3
+PP -> Prep NP 1.0
+Prep ⟶ P 1.0
+Noun ⟶ N 1.0
+Verb ⟶ V 1.0
+
