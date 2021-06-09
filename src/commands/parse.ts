@@ -221,7 +221,7 @@ function ckyChart(sentence: string, lexiconFilePath: string, rulesFilePath: stri
             const {lhs, rhs} = r /** weight is available as 3rd property if needed */
             const [B, C] = rhs.split(' ')
             const A = lhs
-            if (chart[i][j][B] && chart[m][j][C]) chart[i][j][A] = true
+            if (chart[i][j]![B] && chart[m][j]![C]) chart[i][j]![A] = true
           })
         }
       })
