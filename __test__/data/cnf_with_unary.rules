@@ -1,0 +1,5 @@
+S -> NP VP 1
+VP -> M V 0.4
+VP -> V 0.3
+NP -> N 0.7
+NP -> N NP 0.6

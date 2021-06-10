@@ -4,7 +4,7 @@ NP -> Pro 0.3
 NP -> PropN 0.5
 D -> PosPro 0.3
 D -> Art 0.4
-D -> NP ’s 0.3
+D -> NPs 0.3
 VP -> Vp NP VP 0.1
 VP -> Vt NP 0.1
 VP -> Vi 0.8

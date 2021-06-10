@@ -1,0 +1,7 @@
+N can 0.2
+N lead 0.3
+N poison 0.5
+M can 0.5
+M must 0.5
+V poison 0.1
+V lead 0.9
