@@ -1,5 +1,5 @@
 // ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
-import {Command} from '@oclif/command'
+import {Command, flags} from '@oclif/command'
 import LineByLine = require('n-readlines')
 import * as fs from 'fs'
 
@@ -372,13 +372,20 @@ export default class Parse extends Command {
   // `,
   //   ]
 
-  // static flags = {
-  //   help: flags.help({char: 'h'}),
-  //   // flag with a value (-n, --name=VALUE)
-  //   name: flags.string({char: 'n', description: 'name to print'}),
-  //   // flag with no value (-f, --force)
-  //   force: flags.boolean({char: 'f'}),
-  // }
+  static flags = {
+    help: flags.help({char: 'h'}),
+    paradigma: flags.string({char: 'p', description: '-p --paradigma=PARADIGMA\n Paradigma used to parse (cyk or deductive)'}),
+    'initial-nonterminal': flags.string({char: 'i', description: '-i --initial-nonterminal=N\n Set N as start symbol. If not set, then the default value is ROOT'}),
+    unlink: flags.string({char: 'u', description: '-u --unlink\n Replaces unknown words with UNK'}),
+    smoothing: flags.string({char: 's', description: '-s --smoothing\n Replaces unknown words according to the smoothing implementation'}),
+    'threshold-beam': flags.string({char: 't', description: '-t --threshold-beam=THRESHOLD\n Runs Beam-Search with THRESHOLD'}),
+    'rank-beam': flags.string({char: 'r', description: '-r --rank-beam=RANK Runs Beam-Search with Beam of constant size'}),
+    kbest: flags.string({char: 'k', description: '-k --kbest=K\n Outputs K best parsing trees instead of only the best'}),
+    astar: flags.string({char: 'a', description: '-a --astar=PATH\n Runs A*-Search. Load outside weights from the file PATH'}),
+    // flag with no value (-f, --force)
+    // force: flags.boolean({char: 'f'}),
+    // file: flags.string(),
+  }
 
   static args = [
     {
@@ -400,12 +407,21 @@ export default class Parse extends Command {
 
   async run() {
     const {args} = this.parse(Parse)
+    const {flags} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath, sentence} = args
     console.log(`📝 Parsing ${sentence}`)
+    if (flags.force) console.log('--force is set')
+    if (flags.file) console.log(`--file is: ${flags.file}`)
+    if (flags.name) console.log(`--name is: ${flags.file}`)
+    console.log(`--file is: ${flags.help}`)
+    console.log(`flags = ${JSON.stringify(flags)}`)
+    console.log(`args = ${JSON.stringify(args)}`)
+
     // console.log(`args = ${JSON.stringify(args)}`)
     // console.log(`flags = ${JSON.stringify(flags)}`)
     // const g = Grammar.getInstance()
 
     // ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
-    ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
-
+    // ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  }
+}
