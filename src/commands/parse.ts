@@ -290,6 +290,32 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
   return chart
 }
 
+export function isInWords(wordsFilePath: string, word: string): boolean {
+  const liner = new LineByLine(wordsFilePath)
+
+  let line = liner.next()
+
+  while (line) {
+    const w = line.toString('ascii')
+    if (w === word) {
+      return true
+    }
+    line = liner.next()
+  }
+
+  return false
+}
+
+export function checkIfInputCanBeParsed(input: string): boolean {
+  const words: string[] = input.split(' ')
+  words.forEach(w => {
+    if (!isInWords(w)) {
+      return false
+    }
+  })
+  return true
+}
+
 export default class Parse extends Command {
   // static description = 'describe the command here'
 

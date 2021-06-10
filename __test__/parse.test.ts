@@ -11,6 +11,7 @@ import {
   ckyChartWeight,
   getAllUnaryProductionsFromRulesFile,
   unaryClosure,
+  isInWords,
 } from '../src/commands/parse'
 import * as path from 'path'
 
@@ -214,4 +215,16 @@ test('getAllUnaryProductionsFromRulesFile', () => {
     {lhs: 'Verb', rhs: 'V', weight: 1},
   ]
   expect(unaryRules).toEqual(expectedUnaryRules)
+})
+
+test('isInWords should return false if word not in .words file', () => {
+  const wordsFilePath = path.join(__dirname, './data/grammar.words')
+  const word = 'loliiiis'
+  expect(isInWords(wordsFilePath, word)).toBe(false)
+})
+
+test('isInWords should return true if word is in .words file', () => {
+  const wordsFilePath = path.join(__dirname, './data/grammar.words')
+  const word = 'incentive-maximizing'
+  expect(isInWords(wordsFilePath, word)).toBe(true)
 })
