@@ -1,3 +1,4 @@
+/* eslint-disable no-warning-comments */
 import {
   getWordProductionsFromLexiconFile,
   initializeWeightChart,
@@ -12,6 +13,8 @@ import {
   getAllUnaryProductionsFromRulesFile,
   isInWords,
   checkIfInputCanBeParsed,
+  initializeBackChart,
+  BackChart,
 } from '../src/commands/parse'
 import * as path from 'path'
 
@@ -115,9 +118,10 @@ test('ckyChartBoolean', () => {
 
 test('initializeWeightChart without unary rules', () => {
   const sentence = 'the man saw the dog'
-  const filePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
+  const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
   const rulesPath = path.join(__dirname, './data/cnf2_grammar.rules')
-  const chart: WeightChart = initializeWeightChart(sentence, filePath, rulesPath)
+  const back: BackChart = initializeBackChart(sentence)
+  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesPath, back)
   const expectedChart: WeightChart = [
     [{}, {DT: 1}, {}, {}, {}, {}],
     [{}, {}, {NN: 0.1}, {}, {}, {}],
@@ -132,7 +136,8 @@ test('initializeWeightChart with unary rules', () => {
   const sentence = 'book the flight through Houston'
   const filePath = path.join(__dirname, './data/cky_example.lexicon')
   const rulesPath = path.join(__dirname, './data/cky_example.rules')
-  const chart: WeightChart = initializeWeightChart(sentence, filePath, rulesPath)
+  const back: BackChart = initializeBackChart(sentence)
+  const chart: WeightChart = initializeWeightChart(sentence, filePath, rulesPath, back)
   const expectedChart: WeightChart = [
     [{}, {N: 0.5, V: 1, S: 0.01, VP: 0.1, NP: 0.15}, {}, {}, {}, {}],
     [{}, {}, {Det: 1}, {}, {}, {}],
@@ -149,11 +154,12 @@ test('initializeWeightChart with unary rules', () => {
   }
 })
 
-test('ckyChartBoolean', () => {
+// TODO: review name
+test('ckyChartWeight', () => {
   const rulesFilePath = path.join(__dirname, './data/cnf_grammar.rules')
   const lexiconFilePath = path.join(__dirname, './data/cnf_grammar.lexicon')
   const sentence = 'book the flight through Houston'
-  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const [chart] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const expectedChart: WeightChart = [
     [{}, {S: 0.01, Nominal: 0.03, Verb: 0.5}, {}, {S: 0.00135, VP: 0.0135}, {}, {S: 0.000021599999999999996, VP: 0.00021599999999999996}],
     [{}, {}, {Det: 0.6}, {NP: 0.054}, {}, {NP: 0.0008639999999999999}],
@@ -164,11 +170,11 @@ test('ckyChartBoolean', () => {
   expect(chart).toEqual(expectedChart)
 })
 
-test('ckyChartWeight wihout unary rules', () => {
+test('ckyChartWeight returns a chart when a grammar wihout unary rules is passed', () => {
   const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
   const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
   const sentence = 'the man saw the dog'
-  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const [chart] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const expectedChart: WeightChart = [
     [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
     [{}, {}, {NN: 0.1}, {}, {}, {}],
@@ -189,7 +195,7 @@ test('ckyChartWeight with unary rules', () => {
   const rulesFilePath = path.join(__dirname, './data/cnf_with_unary.rules')
   const lexiconFilePath = path.join(__dirname, './data/cnf_with_unary.lexicon')
   const sentence = 'lead can poison'
-  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const [chart] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const expectedChart: WeightChart = [
     [{}, {N: 0.3, V: 0.9, NP: 0.3 * 0.7, VP: 0.9 * 0.3}, {NP: 0.6 * 0.3 * 0.14}, {S: 1 * 0.0252 * 0.03, NP: 0.6 * 0.3 * 0.042}],
     [{}, {}, {N: 0.2, M: 0.5, NP: 0.7 * 0.2}, {S: 1 * 0.14 * 0.03, VP: 0.4 * 0.5 * 0.1, NP: 0.6 * 0.2 * 0.35}],
