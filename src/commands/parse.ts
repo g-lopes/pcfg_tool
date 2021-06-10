@@ -122,13 +122,52 @@ export function initializeChart(sentence: string, lexiconFilePath: string): Bool
   return chart
 }
 
+export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: number, j: number) {
+  const unaryProductions: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
+  let newRule = true
+  let _weight: number
+  let _currentValue: number
+
+  while (newRule) {
+    newRule = false
+    unaryProductions.forEach(unaryProd => {
+      const {lhs, rhs, weight} = unaryProd
+      if (chart[i][j][lhs]) {
+        _currentValue = chart[i][j][lhs]
+      } else {
+        _currentValue = 0
+      }
+
+      if (chart[i][j][rhs]) {
+        _weight = weight * chart[i][j][rhs]
+      } else {
+        _weight = 0
+      }
+
+      if (_weight > _currentValue) {
+        newRule = true
+        chart[i][j][lhs] = _weight
+        // TODO: clean: cells[begin][end].setBackPointer(A, new Triple(-1,B,null))  // special unary rule, no split!
+        // unaryProductions.forEach(unaryRule => {
+        //   const {lhs, rhs, weight} = unaryRule
+        //   if (chart[i][j][rhs]) {
+        //     // update function
+        //     chart[i][j][lhs] = weight
+        //   }
+        // })
+      }
+    })
+  }
+}
+
 /**
  * Given a sentence, returns a WeightChart initialized with the words of the sentence
  * @param {string} sentence - Word (terminal) that we want to find production rules for
  * @param {string} lexiconFilePath - Path of the .lexicon file
+ * @param {string} rulesFilePath - Path of the .rules file
  * @returns {WeightChart} All production rules that yield the given word
  */
-export function initializeWeightChart(sentence: string, lexiconFilePath: string): WeightChart {
+export function initializeWeightChart(sentence: string, lexiconFilePath: string, rulesFilePath: string): WeightChart {
   const chart: WeightChart = []
   const words = sentence.split(' ')
   for (let i = 0; i < words.length; i++) {
@@ -145,6 +184,7 @@ export function initializeWeightChart(sentence: string, lexiconFilePath: string)
       const {lhs, weight} = r
       chart[i - 1][i]![lhs] = weight
     })
+    unaryClosure(rulesFilePath, chart, i - 1, i)
   }
   return chart
 }
@@ -209,17 +249,6 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
 
 /**
  * //TODO: write something here
- * @param {string} sentence - Sentence to be parsed using CYK
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @param {string} rulesFilePath - Path of the .rules file
- * @returns {number} WeightChart
- */
-export function unaryClosure(): number {
-  return -1
-}
-
-/**
- * //TODO: write something here
  * //TODO: functions are really similar, do not repeat yourself
  * @param {string} sentence - Sentence to be parsed using CYK
  * @param {string} lexiconFilePath - Path of the .lexicon file
@@ -227,7 +256,7 @@ export function unaryClosure(): number {
  * @returns {WeightChart} WeightChart
  */
 export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): WeightChart {
-  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath)
+  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesFilePath)
   const words = sentence.split(' ')
 
   for (let r = 2; r <= words.length; r++) { // length of the span
@@ -252,19 +281,9 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
             }
           })
         }
-        let again = true
-        while (again) {
-          again = false
-          const unaryRules: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
-          unaryRules.forEach(r => {
-            const {lhs, rhs, weight} = r
-            if (!chart[i][j][lhs] && chart[i][j][rhs]) {
-              chart[i][j][lhs] = weight
-              again = true
-            }
-          })
-        }
+        // unary logic
       })
+      unaryClosure(rulesFilePath, chart, i, j)
     }
   }
 
