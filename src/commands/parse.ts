@@ -1,6 +1,7 @@
 // ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
 import {Command} from '@oclif/command'
 import LineByLine = require('n-readlines')
+import * as fs from 'fs'
 
 /**
  * @type {BooleanChart} 2D matrix of objects
@@ -290,6 +291,12 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
   return chart
 }
 
+/**
+ *
+ * @param {string} wordsFilePath - Path of the .words file
+ * @param {string} word - given word
+ * @returns {boolean} true if word is in .words file, false otherwise
+ */
 export function isInWords(wordsFilePath: string, word: string): boolean {
   const liner = new LineByLine(wordsFilePath)
 
@@ -306,61 +313,52 @@ export function isInWords(wordsFilePath: string, word: string): boolean {
   return false
 }
 
-export function checkIfInputCanBeParsed(input: string): boolean {
+/**
+ * splits the input strings into an array of words and check
+ * if all words of the input string are in the .words file
+ * @param {string} wordsFilePath - Path of the .words file
+ * @param {string} input - given word
+ * @returns {boolean} true if all words in the file, false otherwise
+ */
+export function checkIfInputCanBeParsed(wordsFilePath: string, input: string): boolean {
   const words: string[] = input.split(' ')
+  let canBeParsed = true
   words.forEach(w => {
-    if (!isInWords(w)) {
-      return false
+    if (!isInWords(wordsFilePath, w)) {
+      canBeParsed = false
     }
   })
-  return true
+  return canBeParsed
 }
 
-export default class Parse extends Command {
-  // static description = 'describe the command here'
+/**
+ * Reads all lines of .lexiconFile and create a new .words file with
+ * all (unique) words read
+ * @param {string} lexiconFilePath - Path of the .lexicon file
+ * @returns {boolean} true if file is created, false otherwise
+ */
+export function createWordsFile(lexiconFilePath: string): boolean {
+  const fileName = 'myfile.words'
+  let successfullyCreated = false
 
-  //   static examples = [
-  //     `$ pcfg_tool hello
-  // hello world from ./src/hello.ts!
-  // `,
-  //   ]
+  const liner = new LineByLine(lexiconFilePath)
+  const allWords = new Set<string>()
 
-  // static flags = {
-  //   help: flags.help({char: 'h'}),
-  //   // flag with a value (-n, --name=VALUE)
-  //   name: flags.string({char: 'n', description: 'name to print'}),
-  //   // flag with no value (-f, --force)
-  //   force: flags.boolean({char: 'f'}),
-  // }
+  let line = liner.next()
 
-  static args = [
-    {
-      name: 'rulesFilePath',
-      required: false,
-      description: 'Path of rules file',
-    },
-    {
-      name: 'lexiconFilePath',
-      required: false,
-      description: 'Path of lexicon file',
-    },
-    {
-      name: 'sentence',
-      required: false,
-      description: 'Sentence to be parsed',
-    },
-  ];
-
-  async run() {
-    const {args} = this.parse(Parse)
-    const {rulesFilePath, lexiconFilePath, sentence} = args
-    console.log(`📝 Parsing ${sentence}`)
-    // console.log(`args = ${JSON.stringify(args)}`)
-    // console.log(`flags = ${JSON.stringify(flags)}`)
-    // const g = Grammar.getInstance()
-
-    // ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
-    ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  while (line) {
+    const str = line.toString('ascii')
+    const [, word] = str.split(' ')
+    if (!allWords.has(word)) {
+      allWords.add(word)
+      fs.appendFile(fileName, word, err => {
+        if (err) throw err
+        successfullyCreated = true
+      })
+    }
+    line = liner.next()
   }
+
+  return successfullyCreated
 }
 
