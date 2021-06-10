@@ -363,12 +363,13 @@ export function createWordsFile(lexiconFilePath: string): boolean {
 }
 
 function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
-  // console.log(`received sentence = ${sentence}`)
-  // console.log(`lexiconFilePath = ${lexiconFilePath}`)
-  // console.log(`rulesFilePath = ${rulesFilePath}`)
   const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
-  // const n = chart[0].length
-  return JSON.stringify(chart)
+  const lastIndex = chart[0].length - 1
+  const lastCell = chart[0][lastIndex]
+  if (lastCell.S) {
+    console.log('There is a tree that represent the given sentence')
+  }
+  return JSON.stringify(chart[0][lastIndex])
 }
 
 // Main
