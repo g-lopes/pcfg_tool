@@ -364,13 +364,15 @@ export function createWordsFile(lexiconFilePath: string): boolean {
 
 // Main
 export default class Parse extends Command {
-  // static description = 'describe the command here'
+  static description = `Reads a sequence of natural language
+  sentences from stin and outputs the best parsing tree to the
+  input sentences in PTB format. If no parsing tree is found,
+  then outputs NOPARSE <sentence> in the stdout. RULES and LEXICON
+  are the names of the PCFG.`
 
-  //   static examples = [
-  //     `$ pcfg_tool hello
-  // hello world from ./src/hello.ts!
-  // `,
-  //   ]
+    static examples = [
+      '$ pcfg_tool parse -u grammar.rules grammar.lexicon',
+    ]
 
   static flags = {
     help: flags.help({char: 'h'}),
