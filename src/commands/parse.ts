@@ -362,3 +362,50 @@ export function createWordsFile(lexiconFilePath: string): boolean {
   return successfullyCreated
 }
 
+// Main
+export default class Parse extends Command {
+  // static description = 'describe the command here'
+
+  //   static examples = [
+  //     `$ pcfg_tool hello
+  // hello world from ./src/hello.ts!
+  // `,
+  //   ]
+
+  // static flags = {
+  //   help: flags.help({char: 'h'}),
+  //   // flag with a value (-n, --name=VALUE)
+  //   name: flags.string({char: 'n', description: 'name to print'}),
+  //   // flag with no value (-f, --force)
+  //   force: flags.boolean({char: 'f'}),
+  // }
+
+  static args = [
+    {
+      name: 'rulesFilePath',
+      required: false,
+      description: 'Path of rules file',
+    },
+    {
+      name: 'lexiconFilePath',
+      required: false,
+      description: 'Path of lexicon file',
+    },
+    {
+      name: 'sentence',
+      required: false,
+      description: 'Sentence to be parsed',
+    },
+  ];
+
+  async run() {
+    const {args} = this.parse(Parse)
+    const {rulesFilePath, lexiconFilePath, sentence} = args
+    console.log(`📝 Parsing ${sentence}`)
+    // console.log(`args = ${JSON.stringify(args)}`)
+    // console.log(`flags = ${JSON.stringify(flags)}`)
+    // const g = Grammar.getInstance()
+
+    // ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
+    ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+
