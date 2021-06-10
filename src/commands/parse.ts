@@ -362,6 +362,15 @@ export function createWordsFile(lexiconFilePath: string): boolean {
   return successfullyCreated
 }
 
+function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
+  // console.log(`received sentence = ${sentence}`)
+  // console.log(`lexiconFilePath = ${lexiconFilePath}`)
+  // console.log(`rulesFilePath = ${rulesFilePath}`)
+  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  // const n = chart[0].length
+  return JSON.stringify(chart)
+}
+
 // Main
 export default class Parse extends Command {
   static description = `Reads a sequence of natural language
@@ -409,21 +418,23 @@ export default class Parse extends Command {
 
   async run() {
     const {args} = this.parse(Parse)
-    const {flags} = this.parse(Parse)
-    const {rulesFilePath, lexiconFilePath, sentence} = args
-    console.log(`📝 Parsing ${sentence}`)
-    if (flags.force) console.log('--force is set')
-    if (flags.file) console.log(`--file is: ${flags.file}`)
-    if (flags.name) console.log(`--name is: ${flags.file}`)
-    console.log(`--file is: ${flags.help}`)
-    console.log(`flags = ${JSON.stringify(flags)}`)
-    console.log(`args = ${JSON.stringify(args)}`)
+    // const {flags} = this.parse(Parse)
+    const {rulesFilePath, lexiconFilePath} = args
+    console.log('📝 Parser started')
+    // console.log('What sentence would you like to parse?')
 
-    // console.log(`args = ${JSON.stringify(args)}`)
-    // console.log(`flags = ${JSON.stringify(flags)}`)
-    // const g = Grammar.getInstance()
+    // const rl = readline.createInterface({
+    //   input: process.stdin,
+    //   output: process.stdout,
+    //   terminal: true,
+    // })
 
-    // ckyChartBoolean(sentence, lexiconFilePath, rulesFilePath)
-    // ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+    // rl.on('line', function (line) {
+    //   console.log('🤓 Parsing started')
+    // console.log(createPTB(line, lexiconFilePath, rulesFilePath))
+    //   console.log('Finished.')
+    // })
+    const line = 'book the flight through Houston'
+    console.log(createPTB(line, lexiconFilePath, rulesFilePath))
   }
 }
