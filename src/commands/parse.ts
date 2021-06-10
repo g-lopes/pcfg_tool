@@ -1,4 +1,3 @@
-// ./pcfg_tool parse grammar.rules grammar.lexicon < sentences
 import {Command, flags} from '@oclif/command'
 import LineByLine = require('n-readlines')
 import * as fs from 'fs'
@@ -11,6 +10,10 @@ export type BooleanChart = ({[lhs: string]: boolean})[][];
  * @type {WeightChart} 2D matrix of objects
  */
 export type WeightChart = ({[lhs: string]: number})[][];
+/**
+ * @type {BackChart} 2D matrix of objects
+ */
+export type BackChart = ({[lhs: string]: any[]})[][];
 
 /**
  * @interface {string} filePath - Path of the .lexicon file
@@ -123,7 +126,7 @@ export function initializeChart(sentence: string, lexiconFilePath: string): Bool
   return chart
 }
 
-export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: number, j: number) {
+export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: number, j: number, back: BackChart) {
   const unaryProductions: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
   let newRule = true
   let _weight: number
@@ -148,14 +151,7 @@ export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: numbe
       if (_weight > _currentValue) {
         newRule = true
         chart[i][j][lhs] = _weight
-        // TODO: clean: cells[begin][end].setBackPointer(A, new Triple(-1,B,null))  // special unary rule, no split!
-        // unaryProductions.forEach(unaryRule => {
-        //   const {lhs, rhs, weight} = unaryRule
-        //   if (chart[i][j][rhs]) {
-        //     // update function
-        //     chart[i][j][lhs] = weight
-        //   }
-        // })
+        back[i][j][lhs] = [-1, rhs, null]
       }
     })
   }
@@ -166,9 +162,10 @@ export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: numbe
  * @param {string} sentence - Word (terminal) that we want to find production rules for
  * @param {string} lexiconFilePath - Path of the .lexicon file
  * @param {string} rulesFilePath - Path of the .rules file
+ * @param {Ba} back - BackChart
  * @returns {WeightChart} All production rules that yield the given word
  */
-export function initializeWeightChart(sentence: string, lexiconFilePath: string, rulesFilePath: string): WeightChart {
+export function initializeWeightChart(sentence: string, lexiconFilePath: string, rulesFilePath: string, back: BackChart): WeightChart {
   const chart: WeightChart = []
   const words = sentence.split(' ')
   for (let i = 0; i < words.length; i++) {
@@ -185,7 +182,7 @@ export function initializeWeightChart(sentence: string, lexiconFilePath: string,
       const {lhs, weight} = r
       chart[i - 1][i]![lhs] = weight
     })
-    unaryClosure(rulesFilePath, chart, i - 1, i)
+    unaryClosure(rulesFilePath, chart, i - 1, i, back)
   }
   return chart
 }
@@ -248,6 +245,19 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
   return chart
 }
 
+export function initializeBackChart(sentence: string): BackChart {
+  const back: BackChart = []
+
+  const words = sentence.split(' ')
+  for (let i = 0; i < words.length; i++) {
+    back[i] = []
+    for (let j = 0; j <= words.length; j++) {
+      back[i][j] = {}
+    }
+  }
+  return back
+}
+
 /**
  * //TODO: write something here
  * //TODO: functions are really similar, do not repeat yourself
@@ -256,8 +266,9 @@ export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rules
  * @param {string} rulesFilePath - Path of the .rules file
  * @returns {WeightChart} WeightChart
  */
-export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): WeightChart {
-  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesFilePath)
+export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): [WeightChart, BackChart] {
+  const back: BackChart = initializeBackChart(sentence)
+  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesFilePath, back)
   const words = sentence.split(' ')
 
   for (let r = 2; r <= words.length; r++) { // length of the span
@@ -278,17 +289,20 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
               if (!chart[i][j][A]) {
                 chart[i][j][A] = 0
               }
-              chart[i][j]![A] = Math.max(chart[i][j]![A], ruleWeight)
+              if (ruleWeight > chart[i][j]![A]) {
+                chart[i][j]![A] = ruleWeight
+                back[i][j]![A] = [m, B, C]
+              }
             }
           })
         }
         // unary logic
       })
-      unaryClosure(rulesFilePath, chart, i, j)
+      unaryClosure(rulesFilePath, chart, i, j, back)
     }
   }
 
-  return chart
+  return [chart, back]
 }
 
 /**
@@ -363,7 +377,7 @@ export function createWordsFile(lexiconFilePath: string): boolean {
 }
 
 function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
-  const chart: WeightChart = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const lastIndex = chart[0].length - 1
   const lastCell = chart[0][lastIndex]
   if (lastCell.S) {
@@ -380,9 +394,9 @@ export default class Parse extends Command {
   then outputs NOPARSE <sentence> in the stdout. RULES and LEXICON
   are the names of the PCFG.`
 
-    static examples = [
-      '$ pcfg_tool parse -u grammar.rules grammar.lexicon',
-    ]
+  static examples = [
+    '$ pcfg_tool parse -u grammar.rules grammar.lexicon',
+  ]
 
   static flags = {
     help: flags.help({char: 'h'}),
