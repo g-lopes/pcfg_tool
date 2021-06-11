@@ -55,7 +55,12 @@
     "bin": "pcfg_tool",
     "plugins": [
       "@oclif/plugin-help"
-    ]
+    ],
+    "hooks": {
+      "command_not_found": [
+        "./lib/hooks/custom-command-not-found/custom-command-not-found"
+      ]
+    }
   },
   "repository": "playground/pcfg_tool",
   "scripts": {
