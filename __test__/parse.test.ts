@@ -1,4 +1,3 @@
-/* eslint-disable no-warning-comments */
 import {
   getWordProductionsFromLexiconFile,
   initializeWeightChart,

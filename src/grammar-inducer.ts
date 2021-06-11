@@ -1,3 +1,4 @@
+/* eslint-disable no-warning-comments */
 // TODO: get rid of global variables
 // TODO: refactor entire file
 // first implementation should calculate 'count' and 'weight' of each rule as soon
