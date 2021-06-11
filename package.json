@@ -58,7 +58,7 @@
     ],
     "hooks": {
       "command_not_found": [
-        "./lib/hooks/custom-command-not-found/custom-command-not-found"
+        "./lib/hooks/custom_command_not_found/custom-command-not-found"
       ]
     }
   },
