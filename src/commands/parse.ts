@@ -333,15 +333,15 @@ export function isInLexicon(lexiconFile: string, sentence: string): boolean {
 /**
  * splits the input strings into an array of words and check
  * if all words of the input string are in the .words file
- * @param {string} wordsFilePath - Path of the .words file
+ * @param {string} lexiconFilePath - Path of the .words file
  * @param {string} input - given word
  * @returns {boolean} true if all words in the file, false otherwise
  */
-export function canBeParsed(wordsFilePath: string, input: string): boolean {
+export function canBeParsed(lexiconFilePath: string, input: string): boolean {
   const words: string[] = input.split(' ')
   let canBeParsed = true
   words.forEach(w => {
-    if (!isInLexicon(wordsFilePath, w)) {
+    if (!isInLexicon(lexiconFilePath, w)) {
       canBeParsed = false
     }
   })
@@ -474,8 +474,6 @@ export default class Parse extends Command {
     console.log('📝 Parser started')
     console.log('What sentence would you like to parse?')
 
-    createWordsFile(lexiconFilePath)
-
     const rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -483,14 +481,16 @@ export default class Parse extends Command {
     })
 
     rl.on('line', function (line) {
-      if(!canBeParsed('.myfile.words', line)) {
-        console.log('NOPARSE')
-      }
-      if(flags['initial-nonterminal']) {
-        console.log(createPTB("priorities", lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
+      if(!canBeParsed(lexiconFilePath, line)) {
+        console.log(`NOPARSE ${line}`)
       } else {
-        console.log(createPTB("priorities", lexiconFilePath, rulesFilePath))
+        console.log('😃 It seems that your sentence can be parsed')
       }
+      // if(flags['initial-nonterminal']) {
+      //   console.log(createPTB("priorities", lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
+      // } else {
+      //   console.log(createPTB("priorities", lexiconFilePath, rulesFilePath))
+      // }
     })
 
     // If user passed custom initial-nonterminal as flag, then use it.
