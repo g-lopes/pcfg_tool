@@ -1,0 +1,6 @@
+S -> NP VP 1
+VP -> Vt NP 0.8
+VP -> VP PP 0.2
+NP -> DT NN 0.8
+NP -> NP PP 0.2
+PP -> IN NP 1
