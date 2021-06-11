@@ -15,6 +15,7 @@ import {
   checkIfInputCanBeParsed,
   initializeBackChart,
   BackChart,
+  backTrace,
 } from '../src/commands/parse'
 import * as path from 'path'
 
@@ -247,4 +248,39 @@ test('checkIfInputCanBeParsed should return false if some word of the input is n
   const wordsFilePath = path.join(__dirname, './data/grammar.words')
   const success: boolean = checkIfInputCanBeParsed(wordsFilePath, input)
   expect(success).toBe(false)
+})
+
+// test('ckyChartWeight should return correct backchart when a grammar wihout unary rules is passed', () => {
+//   const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
+//   const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
+//   const sentence = 'the man saw the dog'
+//   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+//   const expectedChart: WeightChart = [
+//     [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
+//     [{}, {}, {NN: 0.1}, {}, {}, {}],
+//     [{}, {}, {}, {Vt: 1}, {}, {VP: 0.32}],
+//     [{}, {}, {}, {}, {DT: 1}, {NP: 0.4}],
+//     [{}, {}, {}, {}, {}, {NN: 0.5}],
+//   ]
+//   for (let i = 0; i < back.length; i++) {
+//     for (let j = 0; j < back[i].length; j++) {
+//       for (const [key] of Object.entries(back[i][j])) {
+//         expect(back[i][j][key]).toBeCloseTo(expectedChart[i][j][key])
+//       }
+//     }
+//   }
+// })
+
+test('backTrace', () => {
+  const sentence = 'the man saw the dog'
+  const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
+  const rulesPath = path.join(__dirname, './data/cnf2_grammar.rules')
+  const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesPath)
+  const start = 0
+  const end = chart[0].length - 1
+  const backtrace: string[] = backTrace(chart, back, 'S', start, end)
+  const expectedBacktrace: string[] = [
+    'S -> NP VP', 'NP -> DT NN', 'VP -> Vt NP', 'NP -> DT NN',
+  ]
+  expect(backtrace).toEqual(expectedBacktrace)
 })

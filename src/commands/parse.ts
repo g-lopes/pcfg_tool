@@ -376,14 +376,37 @@ export function createWordsFile(lexiconFilePath: string): boolean {
   return successfullyCreated
 }
 
+/**
+ * Reads all lines of .lexiconFile and create a new .words file with
+ * all (unique) words read
+ * @param {WeightChart} chart - Chart with weights
+ * @param {BackChart} back - Chart with backtrace
+ * @param {string} startSymbol - Startsymbol
+ * @param {number} start - start index of span
+ * @param {number} end - end index of span
+ * @returns {string[]} arra of strings of rules
+ */
+export function backTrace(chart: WeightChart, back: BackChart, startSymbol: string, start: number, end: number): string[] {
+  const rulesUsed: string[] = []
+  if(back[start][end][startSymbol]) {
+    const a: string = startSymbol
+    const m: number = back[start][end][a][0]
+    const b: string = back[start][end][a][1]
+    const c: string = back[start][end][a][2]
+
+    return [`${a} -> ${b} ${c}`, ...backTrace(chart,back,b,start, m), ...backTrace(chart,back,c,m,end)]
+  }
+
+  return []
+}
+
 function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
-  const lastIndex = chart[0].length - 1
-  const lastCell = chart[0][lastIndex]
-  if (lastCell.S) {
-    console.log('There is a tree that represent the given sentence')
-  }
-  return JSON.stringify(chart[0][lastIndex])
+  const j = chart[0].length - 1
+  const i = 0
+  backTrace(chart, back, 'S', i, j)
+
+  return JSON.stringify(chart[0][j])
 }
 
 // Main
@@ -449,7 +472,7 @@ export default class Parse extends Command {
     // console.log(createPTB(line, lexiconFilePath, rulesFilePath))
     //   console.log('Finished.')
     // })
-    const line = 'book the flight through Houston'
-    console.log(createPTB(line, lexiconFilePath, rulesFilePath))
+    const line = 'the man saw the dog'
+    createPTB(line, lexiconFilePath, rulesFilePath)
   }
 }
