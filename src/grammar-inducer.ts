@@ -1,6 +1,5 @@
-// TODO: se livrar dessas variavies globais
-// TODO: "NP VP" === "VP NP" ???? Se sim, entao tem que implementar logica pra prever isso
-// TODO: consider making 2 implementations to see which one has better performance
+// TODO: get rid of global variables
+// TODO: refactor entire file
 // first implementation should calculate 'count' and 'weight' of each rule as soon
 // as they are created. the second implementation should only calculate these
 // parameters if the user actually asks for it (probably the better solution)
@@ -29,7 +28,6 @@ export type ResultError = { type: 'error'; error: Error }
 
 export type Result<T> = ResultSuccess<T> | ResultError
 
-// TODO: change name of the function based on its functionality
 // here we are creating an object AND initializing its counter
 export function updateCountLHS(lhs: string): void {
   // if property already exists in the 'rules' object, then only increase counter

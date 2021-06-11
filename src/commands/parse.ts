@@ -213,7 +213,7 @@ export function getAllNonterminals(rulesFilePath: string): string[] {
 }
 
 /**
- * //TODO: write something here
+ * Simple version of cyk algorithm. Doesn't use weights but booleans
  * @param {string} sentence - Sentence to be parsed using CYK
  * @param {string} lexiconFilePath - Path of the .lexicon file
  * @param {string} rulesFilePath - Path of the .rules file
@@ -259,8 +259,7 @@ export function initializeBackChart(sentence: string): BackChart {
 }
 
 /**
- * //TODO: write something here
- * //TODO: functions are really similar, do not repeat yourself
+ * More complex version of cyk algorithm. Uses weights to make decisions.
  * @param {string} sentence - Sentence to be parsed using CYK
  * @param {string} lexiconFilePath - Path of the .lexicon file
  * @param {string} rulesFilePath - Path of the .rules file

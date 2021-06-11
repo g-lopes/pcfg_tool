@@ -155,7 +155,6 @@ test('initializeWeightChart with unary rules', () => {
   }
 })
 
-// TODO: review name
 test('ckyChartWeight', () => {
   const rulesFilePath = path.join(__dirname, './data/cnf_grammar.rules')
   const lexiconFilePath = path.join(__dirname, './data/cnf_grammar.lexicon')
