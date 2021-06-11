@@ -10,11 +10,12 @@ import {
   WeightChart,
   ckyChartWeight,
   getAllUnaryProductionsFromRulesFile,
-  isInWords,
-  checkIfInputCanBeParsed,
+  isInLexicon,
+  canBeParsed,
   initializeBackChart,
   BackChart,
   backTrace,
+  createPTB,
 } from '../src/commands/parse'
 import * as path from 'path'
 
@@ -222,29 +223,30 @@ test('getAllUnaryProductionsFromRulesFile', () => {
   expect(unaryRules).toEqual(expectedUnaryRules)
 })
 
-test('isInWords should return false if word not in .words file', () => {
-  const wordsFilePath = path.join(__dirname, './data/grammar.words')
-  const word = 'loliiiis'
-  expect(isInWords(wordsFilePath, word)).toBe(false)
+test('isInLexicon should return false if word not in .lexicon file', () => {
+  const lexicon = path.join(__dirname, './data/grammar.lexicon')
+  const sentence = 'meu nome eh henrique'
+  const result = isInLexicon(lexicon, sentence)
+  expect(result).toBe(false)
 })
 
-test('isInWords should return true if word is in .words file', () => {
-  const wordsFilePath = path.join(__dirname, './data/grammar.words')
+test('isInLexicon should return true if word is in .words file', () => {
+  const lexicon = path.join(__dirname, './data/grammar.lexicon')
   const word = 'incentive-maximizing'
-  expect(isInWords(wordsFilePath, word)).toBe(true)
+  expect(isInLexicon(lexicon, word)).toBe(true)
 })
 
-test('checkIfInputCanBeParsed should return true if all words are in the .words file', () => {
+test('canBeParsed should return true if all words are in the .lexicon file', () => {
   const input = 'my name is John'
-  const wordsFilePath = path.join(__dirname, './data/grammar.words')
-  const success: boolean = checkIfInputCanBeParsed(wordsFilePath, input)
+  const wordsFilePath = path.join(__dirname, './data/grammar.lexicon')
+  const success: boolean = canBeParsed(wordsFilePath, input)
   expect(success).toBe(true)
 })
 
 test('checkIfInputCanBeParsed should return false if some word of the input is not in the .words file', () => {
   const input = 'Meu nome é João'
   const wordsFilePath = path.join(__dirname, './data/grammar.words')
-  const success: boolean = checkIfInputCanBeParsed(wordsFilePath, input)
+  const success: boolean = canBeParsed(wordsFilePath, input)
   expect(success).toBe(false)
 })
 
@@ -252,7 +254,7 @@ test('checkIfInputCanBeParsed should return false if some word of the input is n
 //   const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
 //   const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
 //   const sentence = 'the man saw the dog'
-//   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+//   const [, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
 //   const expectedChart: WeightChart = [
 //     [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
 //     [{}, {}, {NN: 0.1}, {}, {}, {}],
@@ -280,3 +282,22 @@ test('backTrace', () => {
   const expectedBacktrace = '(S (NP (NP (DT the)(NN man)))(VP (VP (Vt saw)(NP (NP (DT the)(NN dog))))))'
   expect(backtrace).toEqual(expectedBacktrace)
 })
+
+test('createPTB', () => {
+  const sentence = 'priorities'
+  const lexiconFilePath = path.join(__dirname, './data/grammar.lexicon')
+  const rulesFilePath = path.join(__dirname, './data/grammar.rules')
+  const tree: string = createPTB(sentence, lexiconFilePath, rulesFilePath)
+  const expectedBacktrace = '(ROOT (NP (NNS priorities)))'
+  expect(tree).toEqual(expectedBacktrace)
+})
+
+// ROOT -> VP 0.00020931997174180382
+// ROOT -> NP 0.02592951149951595
+// ROOT -> NP-TMP 0.00007849498940317642
+// ROOT -> NP-TMP-HLN 0.00007849498940317642
+// NP -> NNS 0.04468142984263985
+// VP -> NNS 0.00012810020282532115
+// NP-TMP -> NNS 0.0009854644000985464
+// NP-HLN -> NNS 0.012096774193548387
+// NNS priorities 0.00017283097131005876

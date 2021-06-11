@@ -1,4 +1,5 @@
 import {Command, flags} from '@oclif/command'
+import * as readline from 'readline'
 import LineByLine = require('n-readlines')
 import * as fs from 'fs'
 
@@ -306,24 +307,27 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
 
 /**
  *
- * @param {string} wordsFilePath - Path of the .words file
- * @param {string} word - given word
- * @returns {boolean} true if word is in .words file, false otherwise
+ * @param {string} lexiconFile - Path of the .lexicon file
+ * @param {string} sentence - sentence
+ * @returns {boolean} true if all words of sentence is in .words file, false otherwise
  */
-export function isInWords(wordsFilePath: string, word: string): boolean {
-  const liner = new LineByLine(wordsFilePath)
+export function isInLexicon(lexiconFile: string, sentence: string): boolean {
+  const liner = new LineByLine(lexiconFile)
+  const words = new Set(sentence.split(' '))
 
   let line = liner.next()
 
   while (line) {
-    const w = line.toString('ascii')
-    if (w === word) {
-      return true
+    const str = line.toString('ascii')
+    const [,rhs] = str.split(' ')
+    if(words.has(rhs)) {
+      words.delete(rhs)
     }
+
     line = liner.next()
   }
 
-  return false
+  return words.size === 0
 }
 
 /**
@@ -333,11 +337,11 @@ export function isInWords(wordsFilePath: string, word: string): boolean {
  * @param {string} input - given word
  * @returns {boolean} true if all words in the file, false otherwise
  */
-export function checkIfInputCanBeParsed(wordsFilePath: string, input: string): boolean {
+export function canBeParsed(wordsFilePath: string, input: string): boolean {
   const words: string[] = input.split(' ')
   let canBeParsed = true
   words.forEach(w => {
-    if (!isInWords(wordsFilePath, w)) {
+    if (!isInLexicon(wordsFilePath, w)) {
       canBeParsed = false
     }
   })
@@ -387,26 +391,35 @@ export function createWordsFile(lexiconFilePath: string): boolean {
  */
 export function backTrace(chart: WeightChart, back: BackChart, startSymbol: string, start: number, end: number, sentence: string): string {
   const rulesUsed: string[] = []
-  if(back[start][end][startSymbol]) {
+  if(start >= 0 && end >= 0 && back[start][end][startSymbol]) {
     const a: string = startSymbol
-    const m: number = back[start][end][a][0]
+    let m: number = back[start][end][a][0]
     const b: string = back[start][end][a][1]
     const c: string = back[start][end][a][2]
-
-    return `(${a} (${b} ${backTrace(chart,back,b,start, m, sentence)})(${c} ${backTrace(chart,back,c,m,end, sentence)}))`
+    if(m < 0) {
+      m = end
+      return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)}))`
+    } else {
+      return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)})(${c} ${backTrace(chart,back,c,m,end, sentence)}))`
+    }
+    
   } else {
     return sentence.split(' ')[start]
   }
 
 }
-
-function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
+/**
+ * Reads input sentence and returns best tree in PTB format
+ * @param {string} sentence - Sentence of which we want the bes tree
+ * @param {string} lexiconFilePath - Path to .lexicon file
+ * @param {string} rulesFilePath - Path to .rules file
+ * @returns {string} Best Tree in PTB format
+ */
+export function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string, startSymbol:string = 'ROOT'): string {
   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const j = chart[0].length - 1
   const i = 0
-  const nonTerminalRules = backTrace(chart, back, 'S', i, j, sentence)
-
-  return JSON.stringify(chart[0][j])
+  return backTrace(chart, back, startSymbol, i, j, sentence)
 }
 
 // Main
@@ -456,23 +469,31 @@ export default class Parse extends Command {
 
   async run() {
     const {args} = this.parse(Parse)
-    // const {flags} = this.parse(Parse)
+    const {flags} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath} = args
     console.log('📝 Parser started')
-    // console.log('What sentence would you like to parse?')
+    console.log('What sentence would you like to parse?')
 
-    // const rl = readline.createInterface({
-    //   input: process.stdin,
-    //   output: process.stdout,
-    //   terminal: true,
-    // })
+    createWordsFile(lexiconFilePath)
 
-    // rl.on('line', function (line) {
-    //   console.log('🤓 Parsing started')
-    // console.log(createPTB(line, lexiconFilePath, rulesFilePath))
-    //   console.log('Finished.')
-    // })
-    const line = 'the man saw the dog'
-    createPTB(line, lexiconFilePath, rulesFilePath)
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: true,
+    })
+
+    rl.on('line', function (line) {
+      if(!canBeParsed('.myfile.words', line)) {
+        console.log('NOPARSE')
+      }
+      if(flags['initial-nonterminal']) {
+        console.log(createPTB("priorities", lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
+      } else {
+        console.log(createPTB("priorities", lexiconFilePath, rulesFilePath))
+      }
+    })
+
+    // If user passed custom initial-nonterminal as flag, then use it.
+
   }
 }
