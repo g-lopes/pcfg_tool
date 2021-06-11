@@ -278,9 +278,7 @@ test('backTrace', () => {
   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesPath)
   const start = 0
   const end = chart[0].length - 1
-  const backtrace: string[] = backTrace(chart, back, 'S', start, end)
-  const expectedBacktrace: string[] = [
-    'S -> NP VP', 'NP -> DT NN', 'VP -> Vt NP', 'NP -> DT NN',
-  ]
+  const backtrace: string = backTrace(chart, back, 'S', start, end)
+  const expectedBacktrace = '(S (NP (NP (DT the)(NN man)))(VP (VP (Vt saw)(NP (NP (DT the)(NN dog))))))'
   expect(backtrace).toEqual(expectedBacktrace)
 })
