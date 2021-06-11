@@ -1,7 +1,7 @@
 import * as fs from 'fs'
-import * as readLine from 'readline'
-import * as path from 'path'
 import * as P from 'parsimmon'
+import LineByLine = require('n-readlines')
+import * as path from 'path'
 
 export interface RuleStats {
     rhsCount: number;
@@ -179,27 +179,17 @@ export class Grammar {
       wordsFile.end()
     }
 
-    // TODO: use synchronous alternative
     public async readFileLineByLine(filePath: string) {
-      // let numberOfLines = 0
-      // let input: fs.ReadStream | NodeJS.ReadStream = process.stdin
-      // const absolutePath = path.resolve(filePath)
-      // const stream: fs.ReadStream = fs.createReadStream(absolutePath)
-      // input = stream
+      const liner = new LineByLine(path.resolve(filePath))
 
-      // const rl: readLine.Interface = readLine.createInterface({
-      //   input: input,
-      //   output: process.stdout,
-      //   terminal: false,
-      // })
+      let line = liner.next()
 
-      // for await (const line of rl) {
-      //   // processLine
-      //   const expression = this.tokenizer().File.tryParse(line)[0] // index 0 is important
-      //   this.extractRules(expression)
-      //   numberOfLines += 1
-      // }
-      console.log('numerOflines')
+      while (line) {
+        const str = line.toString('ascii')
+        const expression = this.tokenizer().File.tryParse(str)[0] // index 0 is important
+        this.extractRules(expression)
+        line = liner.next()
+      }
     }
 
     public tokenizer(): P.Language {
