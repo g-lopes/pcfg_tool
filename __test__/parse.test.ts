@@ -250,26 +250,26 @@ test('checkIfInputCanBeParsed should return false if some word of the input is n
   expect(success).toBe(false)
 })
 
-// test('ckyChartWeight should return correct backchart when a grammar wihout unary rules is passed', () => {
-//   const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
-//   const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
-//   const sentence = 'the man saw the dog'
-//   const [, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
-//   const expectedChart: WeightChart = [
-//     [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
-//     [{}, {}, {NN: 0.1}, {}, {}, {}],
-//     [{}, {}, {}, {Vt: 1}, {}, {VP: 0.32}],
-//     [{}, {}, {}, {}, {DT: 1}, {NP: 0.4}],
-//     [{}, {}, {}, {}, {}, {NN: 0.5}],
-//   ]
-//   for (let i = 0; i < back.length; i++) {
-//     for (let j = 0; j < back[i].length; j++) {
-//       for (const [key] of Object.entries(back[i][j])) {
-//         expect(back[i][j][key]).toBeCloseTo(expectedChart[i][j][key])
-//       }
-//     }
-//   }
-// })
+test('ckyChartWeight should return correct backchart when a grammar wihout unary rules is passed', () => {
+  const rulesFilePath = path.join(__dirname, './data/cnf2_grammar.rules')
+  const lexiconFilePath = path.join(__dirname, './data/cnf2_grammar.lexicon')
+  const sentence = 'the man saw the dog'
+  const [, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const expectedChart: WeightChart = [
+    [{}, {DT: 1}, {NP: 0.08}, {}, {}, {S: 0.0256}],
+    [{}, {}, {NN: 0.1}, {}, {}, {}],
+    [{}, {}, {}, {Vt: 1}, {}, {VP: 0.32}],
+    [{}, {}, {}, {}, {DT: 1}, {NP: 0.4}],
+    [{}, {}, {}, {}, {}, {NN: 0.5}],
+  ]
+  for (let i = 0; i < back.length; i++) {
+    for (let j = 0; j < back[i].length; j++) {
+      for (const [key] of Object.entries(back[i][j])) {
+        expect(back[i][j][key]).toBeCloseTo(expectedChart[i][j][key])
+      }
+    }
+  }
+})
 
 test('backTrace', () => {
   const sentence = 'the man saw the dog'
@@ -292,12 +292,11 @@ test('createPTB', () => {
   expect(tree).toEqual(expectedBacktrace)
 })
 
-// ROOT -> VP 0.00020931997174180382
-// ROOT -> NP 0.02592951149951595
-// ROOT -> NP-TMP 0.00007849498940317642
-// ROOT -> NP-TMP-HLN 0.00007849498940317642
-// NP -> NNS 0.04468142984263985
-// VP -> NNS 0.00012810020282532115
-// NP-TMP -> NNS 0.0009854644000985464
-// NP-HLN -> NNS 0.012096774193548387
-// NNS priorities 0.00017283097131005876
+test('createPTB with very simple grammar and only one word', () => {
+  const sentence = 'a'
+  const lexiconFilePath = path.join(__dirname, './data/verysimplegrammar.lexicon')
+  const rulesFilePath = path.join(__dirname, './data/verysimplegrammar.rules')
+  const tree: string = createPTB(sentence, lexiconFilePath, rulesFilePath, 'S')
+  const expectedTree = '(S (C (B (A a))))'
+  expect(tree).toEqual(expectedTree)
+})

@@ -398,7 +398,14 @@ export function backTrace(chart: WeightChart, back: BackChart, startSymbol: stri
     const c: string = back[start][end][a][2]
     if(m < 0) {
       m = end
-      return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)}))`
+
+      if(back[start][m][b]) {
+        return `(${a} ${backTrace(chart, back, b, start, m, sentence)})`
+
+      } else {
+        return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)}))`
+      }
+
     } else {
       return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)})(${c} ${backTrace(chart,back,c,m,end, sentence)}))`
     }
@@ -485,12 +492,14 @@ export default class Parse extends Command {
         console.log(`NOPARSE ${line}`)
       } else {
         console.log('😃 It seems that your sentence can be parsed')
+        if(flags['initial-nonterminal']) {
+          console.log(createPTB(line, lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
+        } else {
+          console.log(createPTB(line, lexiconFilePath, rulesFilePath))
+        }
       }
-      // if(flags['initial-nonterminal']) {
-      //   console.log(createPTB("priorities", lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
-      // } else {
-      //   console.log(createPTB("priorities", lexiconFilePath, rulesFilePath))
-      // }
+      rl.close();
+      process.stdin.destroy();
     })
 
     // If user passed custom initial-nonterminal as flag, then use it.
