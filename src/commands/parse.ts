@@ -386,7 +386,7 @@ export function createWordsFile(lexiconFilePath: string): boolean {
  * @param {number} end - end index of span
  * @returns {string[]} arra of strings of rules
  */
-export function backTrace(chart: WeightChart, back: BackChart, startSymbol: string, start: number, end: number): string[] {
+export function backTrace(chart: WeightChart, back: BackChart, startSymbol: string, start: number, end: number, sentence: string): string {
   const rulesUsed: string[] = []
   if(back[start][end][startSymbol]) {
     const a: string = startSymbol
@@ -394,17 +394,18 @@ export function backTrace(chart: WeightChart, back: BackChart, startSymbol: stri
     const b: string = back[start][end][a][1]
     const c: string = back[start][end][a][2]
 
-    return [`${a} -> ${b} ${c}`, ...backTrace(chart,back,b,start, m), ...backTrace(chart,back,c,m,end)]
+    return `(${a} (${b} ${backTrace(chart,back,b,start, m, sentence)})(${c} ${backTrace(chart,back,c,m,end, sentence)}))`
+  } else {
+    return sentence.split(' ')[start]
   }
 
-  return []
 }
 
 function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string): string {
   const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
   const j = chart[0].length - 1
   const i = 0
-  backTrace(chart, back, 'S', i, j)
+  const nonTerminalRules = backTrace(chart, back, 'S', i, j, sentence)
 
   return JSON.stringify(chart[0][j])
 }
