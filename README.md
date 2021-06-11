@@ -2,13 +2,20 @@ pcfg_tool
 =========
 
 <!-- toc -->
+* [Requirements](#requirements)
 * [Installation](#installation)
 * [Commands](#commands)
 * [Regex](#regex)
 * [Observations](#obs)
 <!-- tocstop -->
+
+<!-- requirements -->
+- yarn
+- make
+<!-- requirementsstop -->
 # Installation
-Just run the make file inside the project's main directory
+Just run the make file inside the project's main directory. This installs the dependencies using yarn, then creates a softlink in the current directory, allowing the user to run
+`$ pcfg_tool [COMMAND]`
 <!-- installation -->
 ```sh-session
 $ make -f Makefile
