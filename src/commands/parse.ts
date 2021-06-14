@@ -1,3 +1,6 @@
+// TODO: Review data structure
+// type 'Charts' seems not to make too much sense
+// if it does, then properties (chart and back) need better naming
 import {Command, flags} from '@oclif/command'
 import * as readline from 'readline'
 import LineByLine = require('n-readlines')
