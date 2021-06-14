@@ -16,6 +16,8 @@ export type WeightChart = ({[lhs: string]: number})[][];
  */
 export type BackChart = ({[lhs: string]: any[]})[][];
 
+type Charts = {chart: WeightChart; back: BackChart};
+
 /**
  * @interface {string} filePath - Path of the .lexicon file
  */
@@ -127,7 +129,8 @@ export function initializeChart(sentence: string, lexiconFilePath: string): Bool
   return chart
 }
 
-export function unaryClosure(rulesFilePath: string, chart: WeightChart, i: number, j: number, back: BackChart) {
+export function unaryClosure(rulesFilePath: string, charts: Charts, i: number, j: number) {
+  const {chart, back} = charts
   const unaryProductions: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
   let newRule = true
   let _weight: number
@@ -183,7 +186,8 @@ export function initializeWeightChart(sentence: string, lexiconFilePath: string,
       const {lhs, weight} = r
       chart[i - 1][i]![lhs] = weight
     })
-    unaryClosure(rulesFilePath, chart, i - 1, i, back)
+    const charts: Charts = {chart, back}
+    unaryClosure(rulesFilePath, charts, i - 1, i)
   }
   return chart
 }
@@ -266,7 +270,7 @@ export function initializeBackChart(sentence: string): BackChart {
  * @param {string} rulesFilePath - Path of the .rules file
  * @returns {WeightChart} WeightChart
  */
-export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): [WeightChart, BackChart] {
+export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): Charts {
   const back: BackChart = initializeBackChart(sentence)
   const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesFilePath, back)
   const words = sentence.split(' ')
@@ -298,11 +302,12 @@ export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesF
         }
         // unary logic
       })
-      unaryClosure(rulesFilePath, chart, i, j, back)
+      const charts: Charts = {chart, back}
+      unaryClosure(rulesFilePath, charts, i, j)
     }
   }
 
-  return [chart, back]
+  return {chart, back}
 }
 
 /**
@@ -319,8 +324,8 @@ export function isInLexicon(lexiconFile: string, sentence: string): boolean {
 
   while (line) {
     const str = line.toString('ascii')
-    const [,rhs] = str.split(' ')
-    if(words.has(rhs)) {
+    const [, rhs] = str.split(' ')
+    if (words.has(rhs)) {
       words.delete(rhs)
     }
 
@@ -382,51 +387,46 @@ export function createWordsFile(lexiconFilePath: string): boolean {
 /**
  * Reads all lines of .lexiconFile and create a new .words file with
  * all (unique) words read
- * @param {WeightChart} chart - Chart with weights
- * @param {BackChart} back - Chart with backtrace
+ * @param {Charts} charts - Chart with weights
  * @param {string} startSymbol - Startsymbol
  * @param {number} start - start index of span
  * @param {number} end - end index of span
- * @returns {string[]} arra of strings of rules
+ * @param {string} sentence - end index of span
+ * @returns {string} strings of rules
  */
-export function backTrace(chart: WeightChart, back: BackChart, startSymbol: string, start: number, end: number, sentence: string): string {
-  const rulesUsed: string[] = []
-  if(start >= 0 && end >= 0 && back[start][end][startSymbol]) {
+export function backTrace(charts: Charts, startSymbol: string, start: number, end: number, sentence: string): string {
+  const {back} = charts
+  if (start >= 0 && end >= 0 && back[start][end][startSymbol]) {
     const a: string = startSymbol
     let m: number = back[start][end][a][0]
     const b: string = back[start][end][a][1]
     const c: string = back[start][end][a][2]
-    if(m < 0) {
+    if (m < 0) {
       m = end
 
-      if(back[start][m][b]) {
-        return `(${a} ${backTrace(chart, back, b, start, m, sentence)})`
-
-      } else {
-        return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)}))`
+      if (back[start][m][b]) {
+        return `(${a} ${backTrace(charts, b, start, m, sentence)})`
       }
-
-    } else {
-      return `(${a} (${b} ${backTrace(chart, back, b, start, m, sentence)})(${c} ${backTrace(chart,back,c,m,end, sentence)}))`
+      return `(${a} (${b} ${backTrace(charts, b, start, m, sentence)}))`
     }
-    
-  } else {
-    return sentence.split(' ')[start]
+    return `(${a} (${b} ${backTrace(charts, b, start, m, sentence)})(${c} ${backTrace(charts, c, m, end, sentence)}))`
   }
-
+  return sentence.split(' ')[start]
 }
 /**
  * Reads input sentence and returns best tree in PTB format
  * @param {string} sentence - Sentence of which we want the bes tree
  * @param {string} lexiconFilePath - Path to .lexicon file
  * @param {string} rulesFilePath - Path to .rules file
+ * @param {string} startSymbol - If not passed by user, the default value = 'ROOT'
  * @returns {string} Best Tree in PTB format
  */
-export function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string, startSymbol:string = 'ROOT'): string {
-  const [chart, back] = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+export function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string, startSymbol = 'ROOT'): string {
+  const charts = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
+  const {chart} = charts
   const j = chart[0].length - 1
   const i = 0
-  return backTrace(chart, back, startSymbol, i, j, sentence)
+  return backTrace(charts, startSymbol, i, j, sentence)
 }
 
 // Main
@@ -488,21 +488,20 @@ export default class Parse extends Command {
     })
 
     rl.on('line', function (line) {
-      if(!canBeParsed(lexiconFilePath, line)) {
-        console.log(`NOPARSE ${line}`)
-      } else {
+      if (canBeParsed(lexiconFilePath, line)) {
         console.log('😃 It seems that your sentence can be parsed')
-        if(flags['initial-nonterminal']) {
+        if (flags['initial-nonterminal']) {
           console.log(createPTB(line, lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
         } else {
           console.log(createPTB(line, lexiconFilePath, rulesFilePath))
         }
+      } else {
+        console.log(`NOPARSE ${line}`)
       }
-      rl.close();
-      process.stdin.destroy();
+      rl.close()
+      process.stdin.destroy()
     })
 
     // If user passed custom initial-nonterminal as flag, then use it.
-
   }
 }
