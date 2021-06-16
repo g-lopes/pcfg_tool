@@ -10,7 +10,6 @@ export class InduceCommand extends Command {
   ];
 
   async run() {
-    console.log('🤖 Inducing grammar...')
     const g: Grammar = Grammar.getInstance()
     await g.readFileLineByLine('./corpus/TEST.corpus').then(() => {
       // g.createWordsFile('MYGRAMMAR')
