@@ -7,10 +7,6 @@ import LineByLine = require('n-readlines')
 import * as fs from 'fs'
 
 /**
- * @type {BooleanChart} 2D matrix of objects
- */
-export type BooleanChart = ({[lhs: string]: boolean})[][];
-/**
  * @type {WeightChart} 2D matrix of objects
  */
 export type WeightChart = ({[lhs: string]: number})[][];
@@ -18,8 +14,10 @@ export type WeightChart = ({[lhs: string]: number})[][];
  * @type {BackChart} 2D matrix of objects
  */
 export type BackChart = ({[lhs: string]: any[]})[][];
-
-type Charts = {chart: WeightChart; back: BackChart};
+/**
+ * @type {Charts} Object with two properties: chart: WeightChart and back:BackChart
+ */
+export type Charts = {chart: WeightChart; back: BackChart};
 
 /**
  * @interface {string} filePath - Path of the .lexicon file
@@ -103,33 +101,6 @@ export function getAllUnaryProductionsFromRulesFile(rulesFilePath: string): Prod
   }
 
   return unaryProductions
-}
-
-/**
- * Given a sentence, returns a BooleanChart initialized with the words of the sentence
- * @param {string} sentence - Word (terminal) that we want to find production rules for
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @returns {BooleanChart} All production rules that yield the given word
- */
-export function initializeChart(sentence: string, lexiconFilePath: string): BooleanChart {
-  const chart: BooleanChart = []
-  const words = sentence.split(' ')
-  for (let i = 0; i < words.length; i++) {
-    chart[i] = []
-    for (let j = 0; j <= words.length; j++) {
-      chart[i][j] = {}
-    }
-  }
-  // Loop to get word production rules
-  for (let i = 1; i <= words.length; i++) {
-    // Loop to build the diagonal of the matrix
-    const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
-    rules.forEach(r => {
-      const {lhs} = r
-      chart[i - 1][i]![lhs] = true
-    })
-  }
-  return chart
 }
 
 export function unaryClosure(rulesFilePath: string, charts: Charts, i: number, j: number) {
@@ -218,39 +189,6 @@ export function getAllNonterminals(rulesFilePath: string): string[] {
   }
 
   return [...set] // transforms set into array
-}
-
-/**
- * Simple version of cyk algorithm. Doesn't use weights but booleans
- * @param {string} sentence - Sentence to be parsed using CYK
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @param {string} rulesFilePath - Path of the .rules file
- * @returns {BooleanChart} BooleanChart
- */
-export function ckyChartBoolean(sentence: string, lexiconFilePath: string, rulesFilePath: string): BooleanChart {
-  const chart: BooleanChart = initializeChart(sentence, lexiconFilePath)
-  const words = sentence.split(' ')
-
-  for (let r = 2; r <= words.length; r++) { // length of the span
-    for (let i = 0; i <= words.length - r; i++) {
-      const j = i + r
-
-      const allNonTerminals = getAllNonterminals(rulesFilePath)
-      allNonTerminals.forEach(nt => {
-        for (let m = i + 1; m <= j - 1; m++) {
-          const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
-          allBinaryRules.forEach(r => {
-            const {lhs, rhs} = r /** weight is available as 3rd property if needed */
-            const [B, C] = rhs.split(' ')
-            const A = lhs
-            if (chart[i][m]![B] && chart[m][j]![C]) chart[i][j]![A] = true
-          })
-        }
-      })
-    }
-  }
-
-  return chart
 }
 
 export function initializeBackChart(sentence: string): BackChart {
@@ -454,9 +392,6 @@ export default class Parse extends Command {
     'rank-beam': flags.string({char: 'r', description: '-r --rank-beam=RANK Runs Beam-Search with Beam of constant size'}),
     kbest: flags.string({char: 'k', description: '-k --kbest=K\n Outputs K best parsing trees instead of only the best'}),
     astar: flags.string({char: 'a', description: '-a --astar=PATH\n Runs A*-Search. Load outside weights from the file PATH'}),
-    // flag with no value (-f, --force)
-    // force: flags.boolean({char: 'f'}),
-    // file: flags.string(),
   }
 
   static args = [
