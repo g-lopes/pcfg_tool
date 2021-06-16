@@ -1,4 +1,3 @@
-/* eslint-disable no-warning-comments */
 // TODO: Review data structure
 // type 'Charts' seems not to make too much sense
 // if it does, then properties (chart and back) need better naming

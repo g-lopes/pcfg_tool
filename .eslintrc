@@ -1,6 +1,8 @@
 {
   "rules": {
-    "no-console": "off"
+    "no-console": "off",
+    "no-warning-comments": "off" 
+
   },
   "extends": [
     "oclif",
