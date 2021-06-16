@@ -30,9 +30,9 @@ export class Grammar {
 
     private rules: any = {}
 
-    private constructor() {
-      console.log('constructor called!')
-    }
+    // private constructor() {
+    //   // console.log('constructor called!')
+    // }
 
     public getRules(): any {
       return this.rules

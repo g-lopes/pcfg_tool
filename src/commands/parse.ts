@@ -481,8 +481,8 @@ export default class Parse extends Command {
     const {args} = this.parse(Parse)
     const {flags} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath} = args
-    console.log('📝 Parser started')
-    console.log('What sentence would you like to parse?')
+    // console.log('📝 Parser started')
+    // console.log('What sentence would you like to parse?')
 
     const rl = readline.createInterface({
       input: process.stdin,
@@ -492,7 +492,7 @@ export default class Parse extends Command {
 
     rl.on('line', function (line) {
       if (canBeParsed(lexiconFilePath, line)) {
-        console.log('😃 It seems that your sentence can be parsed')
+        // console.log('😃 It seems that your sentence can be parsed')
         if (flags['initial-nonterminal']) {
           console.log(createPTB(line, lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
         } else {
