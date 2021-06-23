@@ -45,3 +45,4 @@ tests/run/cli.words
 tests/run/debin.mrg
 tests/run/parsed.mrg
 tests/run/unked.mrg
+pcfg_tool
