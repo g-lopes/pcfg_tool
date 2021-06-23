@@ -104,10 +104,9 @@ export function getChildren(tree: Array<SExpression>): SExpression[] {
 //   return parent
 // }
 
-/** Given a label, a tree and a number of vertical contexts, then returns a list
- * of all the labels of the ancestors of the given label.
-* @param {SExpression} tree - Label which we want to modify by appending its parents to it.
-* @returns {string} String with given label and its parents appended in the correct form.
+/** Given a tree, it returns the top-most node (i.e. the tree's label)
+* @param {SExpression} tree - Tree
+* @returns {string} Label of the tree
 */
 export function getLabel(tree: SExpression): string {
   if (typeof tree === 'string') return tree
@@ -138,38 +137,38 @@ export function createSExpression(tree: SExpression, label: string): SExpression
 
 // // v = 1 means that we only have one vertical context (the parent node)
 // // h = infinite means that we have an infinity amount of horizontal contexts, that is ????
-// export function markovize(tree: SExpression, v: number, h: number): SExpression {
-//   const [label, ...children] = tree
-//   if (isPreterminal(tree)) {
-//     return tree
-//   }
-//   // Vertical Markovization
-//   children.forEach(child => {
-//     if (isPreterminal(child)) {
-//       const _label = `${getLabel(child)}^`
-//       setLabel(child, _label)
-//     }
-//   })
+export function markovize(tree: SExpression, v: number, h: number): SExpression {
+  const [label, ...children] = tree
+  if (isPreterminal(tree)) {
+    return tree
+  }
+  // Vertical Markovization
+  children.forEach(child => {
+    if (isPreterminal(child)) {
+      const _label = `${getLabel(child)}^`
+      setLabel(child, _label)
+    }
+  })
 
-//   if (children.length === 1) {
-//     return createSExpression(children[0], (label as string))
-//   }
+  if (children.length === 1) {
+    return createSExpression(children[0], (label as string))
+  }
 
-//   const _label = `@${label}->...`
-//   const _tree: SExpression = horizontalMarkovization(tree, 0, _label)
-//   return createSExpression(getChildren(_tree), label)
+  // const _label = `@${label}->...`
+  // const _tree: SExpression = horizontalMarkovization(tree, 0, _label)
+  // return createSExpression(getChildren(_tree), label)
 
-//   // const k = children.length
-//   // if (k <= 2) {
-//   //   addParents(label)
-//   //   children.forEach(child => markovize(child, v, h))
-//   // } else {
-//   //   // const childrenLabels: string[] = getChildrenLabels((tree as Array<SExpression>))
-//   //   // const _label = `${getOriginalLabel((label as string))}|<${childrenLabels}>`
+  // const k = children.length
+  // if (k <= 2) {
+  //   addParents(label)
+  //   children.forEach(child => markovize(child, v, h))
+  // } else {
+  //   // const childrenLabels: string[] = getChildrenLabels((tree as Array<SExpression>))
+  //   // const _label = `${getOriginalLabel((label as string))}|<${childrenLabels}>`
 
-//   // }
-//   return []
-// }
+  // }
+  return []
+}
 
 // export function horizontalMarkovization(tree: SExpression, n: number, label: string): SExpression {
 //   const leftTree: SExpression = getLeftTree(tree)
