@@ -5,6 +5,9 @@ import {
   // markovize,
   getSubTreeByPosition,
   getChildrenLabels,
+  // getOriginalLabel,
+  createSExpression,
+  getChildren,
 } from '../src/commands/binarise'
 import {SExpression} from '../src/utils'
 
@@ -128,12 +131,25 @@ test('getChildrenLabels only one (terminal) child', () => {
   expect(childrenLabels).toEqual(expectedChildrenLabels)
 })
 
-// test('addParents of terminal should return ', () => {
-//   const tree: SExpression = ['S', ['NP', 'John']]
-//   const labelWithParents = ''
-//   const expectedLabel = ';'
-
-//   expect(labenWithParents).toBe(expectedLabel)
+// test('getOriginalLabel', () => {
+//   const originalTree: SExpression = ['ROOT',
+//     ['FRAG',
+//       ['RB', 'Not'],
+//       ['NP-TMP',
+//         ['DT', 'this'],
+//         ['NN', 'year']],
+//       ['.', '.']]]
+//   const modifiedTree: SExpression = ['ROOT',
+//     ['FRAG^<ROOT>',
+//       ['RB', 'Not'],
+//       ['FRAG|<NP-TMP,.>',
+//         ['NP-TMP',
+//           ['DT', 'this'],
+//           ['NN', 'year']],
+//         ['.', '.']]]]
+//   const originalLabel = getOriginalLabel(originalTree)
+//   expect(originalLabel).not.toBe('FRAG^<ROOT>')
+//   expect(originalLabel).toBe('FRAG')
 // })
 
 // test('getAncestorsLabels', () => {
@@ -197,3 +213,71 @@ test('getChildrenLabels only one (terminal) child', () => {
 //   expect(binerizedTree).toBe(expectedBinarizedTree)
 // })
 
+test('createSExpression', () => {
+  const label = 'ROOT'
+  const originalTree: SExpression = ['FRAG^<ROOT>',
+    ['RB', 'Not'],
+    ['FRAG|<NP-TMP,.>^<ROOT>',
+      ['NP-TMP^<FRAG,ROOT>',
+        ['DT', 'this'],
+        ['NN', 'year']],
+      ['.', '.']]]
+  const expectedTree: SExpression = [
+    'ROOT',
+    ['FRAG^<ROOT>',
+      ['RB', 'Not'],
+      ['FRAG|<NP-TMP,.>^<ROOT>',
+        ['NP-TMP^<FRAG,ROOT>',
+          ['DT', 'this'],
+          ['NN', 'year']],
+        ['.', '.']]],
+  ]
+  const newTree: SExpression = createSExpression(originalTree, label)
+  console.log(newTree)
+  expect(newTree).toEqual(expectedTree)
+})
+
+test('getChildren of a tree with only one (nonterminal) child', () => {
+  const tree: SExpression = ['ROOT',
+    ['FRAG',
+      ['RB', 'Not'],
+      ['NP-TMP',
+        ['DT', 'this'],
+        ['NN', 'year']],
+      ['.', '.']]]
+  const children = getChildren(tree)
+  const expectedChildren: SExpression = [['FRAG',
+    ['RB', 'Not'],
+    ['NP-TMP',
+      ['DT', 'this'],
+      ['NN', 'year']],
+    ['.', '.']]]
+  expect(children).toEqual(expectedChildren)
+})
+
+test('getChildren three (nonterminal) children', () => {
+  const tree: SExpression = [
+    'FRAG',
+    ['RB', 'Not'],
+    ['NP-TMP',
+      ['DT', 'this'],
+      ['NN', 'year']],
+    ['.', '.'],
+  ]
+  const children = getChildren(tree)
+  const expectedChildren: SExpression = [
+    ['RB', 'Not'],
+    ['NP-TMP',
+      ['DT', 'this'],
+      ['NN', 'year']],
+    ['.', '.'],
+  ]
+  expect(children).toEqual(expectedChildren)
+})
+
+test('getChildren only one (terminal) child', () => {
+  const tree: SExpression = ['RB', 'Not']
+  const children = getChildren(tree)
+  const expectedChildren: SExpression = ['Not']
+  expect(children).toEqual(expectedChildren)
+})

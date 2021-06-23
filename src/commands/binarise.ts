@@ -80,6 +80,16 @@ export function getChildrenLabels(tree: Array<SExpression>): string[] {
   return labels
 }
 
+export function getChildren(tree: Array<SExpression>): SExpression[] {
+  const [, ...children] = tree
+  return children
+}
+
+// export function getOriginalLabel(label: string): string {
+//   const originalLabel = ''
+//   return originalLabel
+// }
+
 // /** Given a label, a tree and a number of vertical contexts, then returns a list
 //  * of all the labels of the ancestors of the given label.
 // * @param {SExpression} tree - Label which we want to modify by appending its parents to it.
@@ -94,27 +104,66 @@ export function getChildrenLabels(tree: Array<SExpression>): string[] {
 //   return parent
 // }
 
-// v = 1 means that we only have one vertical context (the parent node)
-// h = infinite means that we have an infinity amount of horizontal contexts, that is ????
+// function getLabel(tree: SExpression): string {
+//   if (typeof tree === 'string') return tree
+//   return (tree as Array<string>)[0]
+// }
+
+// function setLabel(tree: SExpression, label: string): void {
+//   if (typeof tree === 'string') {
+//     tree = label
+//   } else {
+//     (tree as Array<string>)[0] = label
+//   }
+// }
+
+export function createSExpression(tree: SExpression, label: string): SExpression {
+  return [label, tree]
+}
+
+// // v = 1 means that we only have one vertical context (the parent node)
+// // h = infinite means that we have an infinity amount of horizontal contexts, that is ????
 // export function markovize(tree: SExpression, v: number, h: number): SExpression {
 //   const [label, ...children] = tree
 //   if (isPreterminal(tree)) {
 //     return tree
 //   }
-//   const k = children.length
-//   if (k <= 2) {
-//     children.forEach(child => markovize(child, v, h))
-//   } else {
-//     const childrenLabels: string[] = getChildrenLabels(tree)
-//     const _label = `${getOriginalLabel(label)}|<>`
-//     // const afterPipe = ''
-//     // for(let i = 2, i <= h+1; i++){
-//     //   afterPipe = afterPipe + getLabel(tree[i])
-//     // }
-//     // const newLabel: string = `${label}|${afterPipe}`
-//     // return addParents(label)
+//   // Vertical Markovization
+//   children.forEach(child => {
+//     if (isPreterminal(child)) {
+//       const _label = `${getLabel(child)}^`
+//       setLabel(child, _label)
+//     }
+//   })
+
+//   if (children.length === 1) {
+//     return createSExpression(children[0], (label as string))
 //   }
+
+//   const _label = `@${label}->...`
+//   const _tree: SExpression = horizontalMarkovization(tree, 0, _label)
+//   return createSExpression(getChildren(_tree), label)
+
+//   // const k = children.length
+//   // if (k <= 2) {
+//   //   addParents(label)
+//   //   children.forEach(child => markovize(child, v, h))
+//   // } else {
+//   //   // const childrenLabels: string[] = getChildrenLabels((tree as Array<SExpression>))
+//   //   // const _label = `${getOriginalLabel((label as string))}|<${childrenLabels}>`
+
+//   // }
 //   return []
+// }
+
+// export function horizontalMarkovization(tree: SExpression, n: number, label: string): SExpression {
+//   const leftTree: SExpression = getLeftTree(tree)
+//   const children: Array<SExpression> = []
+//   children.push(markovize(leftTree, 1, 999))
+
+//   if (n < tree.length - 2) {
+//     const _label = ''
+//   }
 // }
 export default class Binarise extends Command {
   static description = `Reads a sequence of constituent trees from stdin and 
