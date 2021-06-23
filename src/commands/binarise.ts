@@ -104,19 +104,34 @@ export function getChildren(tree: Array<SExpression>): SExpression[] {
 //   return parent
 // }
 
-// function getLabel(tree: SExpression): string {
-//   if (typeof tree === 'string') return tree
-//   return (tree as Array<string>)[0]
-// }
+/** Given a label, a tree and a number of vertical contexts, then returns a list
+ * of all the labels of the ancestors of the given label.
+* @param {SExpression} tree - Label which we want to modify by appending its parents to it.
+* @returns {string} String with given label and its parents appended in the correct form.
+*/
+export function getLabel(tree: SExpression): string {
+  if (typeof tree === 'string') return tree
+  return (tree as Array<string>)[0]
+}
 
-// function setLabel(tree: SExpression, label: string): void {
-//   if (typeof tree === 'string') {
-//     tree = label
-//   } else {
-//     (tree as Array<string>)[0] = label
-//   }
-// }
+/** Change tree label (top-most node of the tree)
+* @param {SExpression} tree - Tree which will become subtree of label.
+* @param {string} label - Label to be attached at the top of tree
+* @returns {void} Does not return anything.
+*/
+export function setLabel(tree: SExpression, label: string): void {
+  if (typeof tree === 'string') {
+    tree = label
+  } else {
+    (tree as Array<string>)[0] = label
+  }
+}
 
+/** Given a label and a tree, attach label at the top of the tree
+* @param {SExpression} tree - Tree which will become subtree of label.
+* @param {string} label - Label to be attached at the top of tree
+* @returns {void} Does not return anything.
+*/
 export function createSExpression(tree: SExpression, label: string): SExpression {
   return [label, tree]
 }
