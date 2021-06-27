@@ -15,13 +15,25 @@ export interface Production {
   }
 
 export type Chart = {[i: string]: {[j: string]: {[lhs: string]: number}}}
-export type BackpointerChart = {[i: string]: {[j: string]: {[lhs: string]: any[]}}}
+export type BackpointerChart = {[i: string]: {[j: string]: {[lhs: string]: Pointer}}}
+export type Pointer = PreterminalPointer | BinaryPointer | UnaryPointer
+export type PreterminalPointer = {A: string; w: string; weight: number}
+export type BinaryPointer = {A: string; B: string; C: string; weight: number; i: number; m: number; j: number}
+export type UnaryPointer = {A: string; B: string; weight: number; i: number; j: number}
 
 // Global Variables
 let rulesFile: string
 let lexiconFile: string
 let chart: Chart
 let backpointerChart: BackpointerChart
+
+function isPreterminalPointer(pointer: PreterminalPointer | BinaryPointer | UnaryPointer): pointer is PreterminalPointer {
+  return (pointer as PreterminalPointer).w !== undefined
+}
+
+function isBinaryPointer(pointer: PreterminalPointer | BinaryPointer | UnaryPointer): pointer is BinaryPointer {
+  return (pointer as BinaryPointer).m !== undefined
+}
 
 // Methods
 export function getChart(): Chart {
@@ -30,6 +42,10 @@ export function getChart(): Chart {
 
 export function getBackpointerChart(): BackpointerChart {
   return backpointerChart
+}
+
+export function setBackpointerChart(bpChart: BackpointerChart): void {
+  backpointerChart = bpChart
 }
 
 export function setRulesFile(path: string): void {
@@ -70,8 +86,8 @@ export function addUnary(begin: number, end: number) {
       const prob = chart[begin][end][rhs] ? chart[begin][end][rhs] * weight : 0
       const _weight = chart[begin][end][lhs] ? chart[begin][end][lhs] : 0
       if (prob > _weight) {
-        chart[begin][end][lhs] = prob
-        // backpointerChart[begin][end][lhs] = [...B]
+        const pointer: UnaryPointer = {A: lhs, B: rhs, weight: -1, i: begin, j: end}
+        backpointerChart[begin][end][lhs] = pointer
         newRule = true
       }
     })
@@ -125,13 +141,26 @@ export function initializeEmptyChart(words: string[]): void {
   }
 }
 
+/* very similar to initializeEmptyChart. Could use refactoring **/
+export function initializeEmptyBackpointerChart(words: string[]): void {
+  backpointerChart = {}
+  for (let i = 0; i < words.length; i++) {
+    backpointerChart[i] = {}
+    for (let j = i + 1; j <= words.length; j++) {
+      backpointerChart[i][j] = {}
+    }
+  }
+}
+
 export function fillChartDiagonal(words: string[]): void {
-  for (let i = 1; i <= words.length; i++) {
-    const productions: Production[] = getProductionsOf(words[i - 1])
+  for (let j = 1; j <= words.length; j++) {
+    const productions: Production[] = getProductionsOf(words[j - 1])
     productions.forEach(prod => {
-      chart[i - 1][i][prod.lhs] = prod.weight
+      chart[j - 1][j][prod.lhs] = prod.weight
+      const pointer: PreterminalPointer = {A: prod.lhs, w: prod.rhs, weight: -1}
+      backpointerChart[j - 1][j][prod.lhs] = pointer
     })
-    addUnary(i - 1, i)
+    addUnary(j - 1, j)
   }
 }
 
@@ -158,12 +187,30 @@ export function getBinaryProductions(nonTerminal: string): Production[] {
   return binaryProductions
 }
 
-export function buildTree(): SExpression {
-  throw new Error('not implemented')
+export function getPointer(i: number, j: number, symbol: string): Pointer {
+  return backpointerChart[i][j][symbol]
+}
+
+export function buildTree(pointer: Pointer): SExpression {
+  if (isPreterminalPointer(pointer)) {
+    const {A, w} = pointer
+    return [A, w]
+  }
+  if (isBinaryPointer(pointer)) {
+    const {A, B, C, i, m, j} = pointer
+    const leftSubTree: Pointer = getPointer(i, m, B)
+    const rightSubTree: Pointer = getPointer(m, j, C)
+    return [A, buildTree(leftSubTree), buildTree(rightSubTree)]
+  }
+  // It it is not preterminal nor binary, then it is a UnaryPointer
+  const {A, B, i, j} = pointer
+  const subTree: Pointer = getPointer(i, j, B)
+  return [A, buildTree(subTree)]
 }
 
 export function cyk(words: string[]): SExpression {
   initializeEmptyChart(words)
+  initializeEmptyBackpointerChart(words)
   fillChartDiagonal(words)
 
   for (let r = 2; r <= words.length; r++) {
@@ -182,10 +229,12 @@ export function cyk(words: string[]): SExpression {
               const ruleWeight: number = chart[i][m]![B] * chart[m][j]![C] * weight
               if (!chart[i][j][A]) {
                 chart[i][j][A] = 0
+                // atualizar backpointers?
               }
               if (ruleWeight > chart[i][j]![A]) {
                 chart[i][j]![A] = ruleWeight
-                // backpointerChart[i][j]![A] = [m, B, C]
+                const pointer: BinaryPointer = {A, B, C, weight, i, m, j}
+                backpointerChart[i][j]![A] = pointer
               }
             }
           })
