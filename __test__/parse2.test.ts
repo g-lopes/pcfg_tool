@@ -1,7 +1,7 @@
 
 import {setBackpointerChart, initializeEmptyBackpointerChart, cyk, fillChartDiagonal, getChart, initializeEmptyChart, setLexiconFile, setRulesFile, Chart, BackpointerChart, getBackpointerChart, getPointer, buildTree} from '../src/commands/parse2'
 import * as path from 'path'
-import {SExpression} from '../src/grammar-inducer'
+import {SExpression} from '../src/utils'
 
 // test('initializeEmptyChart', () => {
 //   const sentence = 'the man saw the dog'
@@ -275,3 +275,28 @@ import {SExpression} from '../src/grammar-inducer'
 //   const expectedTree: SExpression = ['S', ['VP', ['VP', ['VP', ['V', 'book']], ['NP', ['Det', 'the'], ['N', 'flight']]], ['PP', ['Prep', 'through'], ['NP', ['N', 'Houston']]]]]
 //   expect(bestTree).toEqual(expectedTree)
 // })
+
+test('official_test sentences', () => {
+  setLexiconFile(path.join(__dirname, './data/official_test.lexicon'))
+  setRulesFile(path.join(__dirname, './data/official_test.rules'))
+  const sentences = [
+    'a b',
+    // 'a a b b b',
+    // 'b a',
+    // 'a a',
+    // 'b',
+  ]
+
+  const expectedTrees = [
+    '(ROOT (X (A a)) (Y (B b)))',
+    // '(ROOT (X (A a) (X (A a))) (Y (B b) (Y (B b) (Y (B b)))))',
+    // '(ROOT (X (A (B b))) (Y (B (A a))))',
+    // '(ROOT (X (A a)) (Y (B (A a))))',
+    // '(NOPARSE b)',
+  ]
+
+  const words = sentences[0].split(' ')
+  const result: SExpression = cyk(words, 'ROOT')
+  console.log(result)
+  expect(result).toEqual(expectedTrees[0])
+})

@@ -79,15 +79,18 @@ export function getUnaryProductions(): Production[] {
 export function addUnary(begin: number, end: number) {
   let newRule = true
   const unaryProductions: Production[] = getUnaryProductions()
+  const nonterminals = Object.keys(chart[begin][end])
+  console.log(nonterminals)
   while (newRule) {
     newRule = false
     unaryProductions.forEach(prod => {
       const {lhs, rhs, weight} = prod
-      const prob = chart[begin][end][rhs] ? chart[begin][end][rhs] * weight : 0
-      const _weight = chart[begin][end][lhs] ? chart[begin][end][lhs] : 0
-      if (prob > _weight) {
+      const newWeight = chart[begin][end][rhs] ? chart[begin][end][rhs] * weight : 0
+      const oldWeight = chart[begin][end][lhs] ? chart[begin][end][lhs] : 0
+      if (newWeight > oldWeight) {
         const pointer: UnaryPointer = {A: lhs, B: rhs, weight: -1, i: begin, j: end}
         backpointerChart[begin][end][lhs] = pointer
+        chart[begin][end][lhs] = newWeight
         newRule = true
       }
     })
@@ -208,13 +211,14 @@ export function buildTree(pointer: Pointer): SExpression {
   return [A, buildTree(subTree)]
 }
 
-export function cyk(words: string[]): SExpression {
+export function cyk(words: string[], startSymbol: string): SExpression {
   initializeEmptyChart(words)
   initializeEmptyBackpointerChart(words)
   fillChartDiagonal(words)
+  const numberOfWords = words.length
 
-  for (let r = 2; r <= words.length; r++) {
-    for (let i = 0; i <= words.length - r; i++) {
+  for (let r = 2; r <= numberOfWords; r++) {
+    for (let i = 0; i <= numberOfWords - r; i++) {
       const j = i + r
 
       const allNonTerminals = getAllNonterminals()
@@ -243,8 +247,15 @@ export function cyk(words: string[]): SExpression {
       })
     }
   }
-  return []
-  // return buildTree()
+  if (backpointerChart[0][numberOfWords][startSymbol]) {
+    const pointer = backpointerChart[0][numberOfWords][startSymbol]
+    return buildTree(pointer)
+  }
+  throw new Error('NOPARSE')
+}
+
+export function sExpression2Lisp(expression: SExpression): string {
+  return ''
 }
 
 // Main
