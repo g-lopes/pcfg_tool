@@ -79,8 +79,6 @@ export function getUnaryProductions(): Production[] {
 export function addUnary(begin: number, end: number) {
   let newRule = true
   const unaryProductions: Production[] = getUnaryProductions()
-  const nonterminals = Object.keys(chart[begin][end])
-  console.log(nonterminals)
   while (newRule) {
     newRule = false
     unaryProductions.forEach(prod => {
@@ -211,7 +209,7 @@ export function buildTree(pointer: Pointer): SExpression {
   return [A, buildTree(subTree)]
 }
 
-export function cyk(words: string[], startSymbol: string): SExpression {
+export function cyk(words: string[], startSymbol: string): SExpression | Error {
   initializeEmptyChart(words)
   initializeEmptyBackpointerChart(words)
   fillChartDiagonal(words)
@@ -251,11 +249,20 @@ export function cyk(words: string[], startSymbol: string): SExpression {
     const pointer = backpointerChart[0][numberOfWords][startSymbol]
     return buildTree(pointer)
   }
-  throw new Error('NOPARSE')
+  return new Error(`${words}`)
 }
 
-export function sExpression2Lisp(expression: SExpression): string {
-  return ''
+export function sExpression2Lisp(expression: SExpression | Error): string {
+  if (expression instanceof Error) {
+    return `(NOPARSE ${expression.message})`
+  }
+  if (typeof expression[0] === 'string' && typeof expression[1] === 'string') {
+    return `(${expression[0]} ${expression[1]})`
+  }
+  if (typeof expression[0] === 'string' && typeof expression[1] !== 'string' && !expression[2]) {
+    return `(${expression[0]} ${sExpression2Lisp(expression[1])})`
+  }
+  return `(${expression[0]} ${sExpression2Lisp(expression[1])} ${sExpression2Lisp(expression[2])})`
 }
 
 // Main

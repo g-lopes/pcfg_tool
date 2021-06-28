@@ -1,5 +1,5 @@
 
-import {setBackpointerChart, initializeEmptyBackpointerChart, cyk, fillChartDiagonal, getChart, initializeEmptyChart, setLexiconFile, setRulesFile, Chart, BackpointerChart, getBackpointerChart, getPointer, buildTree} from '../src/commands/parse2'
+import {setBackpointerChart, initializeEmptyBackpointerChart, cyk, fillChartDiagonal, getChart, initializeEmptyChart, setLexiconFile, setRulesFile, Chart, BackpointerChart, getBackpointerChart, getPointer, buildTree, sExpression2Lisp} from '../src/commands/parse2'
 import * as path from 'path'
 import {SExpression} from '../src/utils'
 
@@ -281,22 +281,24 @@ test('official_test sentences', () => {
   setRulesFile(path.join(__dirname, './data/official_test.rules'))
   const sentences = [
     'a b',
-    // 'a a b b b',
-    // 'b a',
-    // 'a a',
-    // 'b',
+    'a a b b b',
+    'b a',
+    'a a',
+    'b',
   ]
 
   const expectedTrees = [
     '(ROOT (X (A a)) (Y (B b)))',
-    // '(ROOT (X (A a) (X (A a))) (Y (B b) (Y (B b) (Y (B b)))))',
-    // '(ROOT (X (A (B b))) (Y (B (A a))))',
-    // '(ROOT (X (A a)) (Y (B (A a))))',
-    // '(NOPARSE b)',
+    '(ROOT (X (A a) (X (A a))) (Y (B b) (Y (B b) (Y (B b)))))',
+    '(ROOT (X (A (B b))) (Y (B (A a))))',
+    '(ROOT (X (A a)) (Y (B (A a))))',
+    '(NOPARSE b)',
   ]
 
-  const words = sentences[0].split(' ')
-  const result: SExpression = cyk(words, 'ROOT')
-  console.log(result)
-  expect(result).toEqual(expectedTrees[0])
+  sentences.forEach((s, index) => {
+    const words = s.split(' ')
+    const result: SExpression | Error = cyk(words, 'ROOT')
+    const treeAsString = sExpression2Lisp(result)
+    expect(treeAsString).toEqual(expectedTrees[index])
+  })
 })
