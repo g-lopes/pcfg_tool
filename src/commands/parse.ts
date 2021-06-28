@@ -2,40 +2,123 @@
 // type 'Charts' seems not to make too much sense
 // if it does, then properties (chart and back) need better naming
 import {Command, flags} from '@oclif/command'
-import * as readline from 'readline'
+// import * as readline from 'readline'
 import LineByLine = require('n-readlines')
-import * as fs from 'fs'
+import {SExpression} from '../grammar-inducer'
+// import * as fs from 'fs'
+import cli from 'cli-ux'
 
-/**
- * @type {WeightChart} 2D matrix of objects
- */
-export type WeightChart = ({[lhs: string]: number})[][];
-/**
- * @type {BackChart} 2D matrix of objects
- */
-export type BackChart = ({[lhs: string]: any[]})[][];
-/**
- * @type {Charts} Object with two properties: chart: WeightChart and back:BackChart
- */
-export type Charts = {chart: WeightChart; back: BackChart};
-
-/**
- * @interface {string} filePath - Path of the .lexicon file
- */
+// Data Structures
 export interface Production {
-  lhs: string;
-  rhs: string;
-  weight: number;
+    lhs: string;
+    rhs: string;
+    weight: number;
+  }
+
+export type Chart = {[i: string]: {[j: string]: {[lhs: string]: number}}}
+export type BackpointerChart = {[i: string]: {[j: string]: {[lhs: string]: Pointer}}}
+export type Pointer = PreterminalPointer | BinaryPointer | UnaryPointer
+export type PreterminalPointer = {A: string; w: string; weight: number}
+export type BinaryPointer = {A: string; B: string; C: string; weight: number; i: number; m: number; j: number}
+export type UnaryPointer = {A: string; B: string; weight: number; i: number; j: number}
+
+// Global Variables
+let rulesFile: string
+let lexiconFile: string
+let chart: Chart
+let backpointerChart: BackpointerChart
+
+function isPreterminalPointer(pointer: PreterminalPointer | BinaryPointer | UnaryPointer): pointer is PreterminalPointer {
+  return (pointer as PreterminalPointer).w !== undefined
 }
 
-/**
- * @param {string} filePath - Path of the .lexicon file
- * @param {string} word - Word (terminal) that we want to find production rules for
- * @returns {Production[]} All production rules that yield the given word
- */
-export function getWordProductionsFromLexiconFile(filePath: string, word: string): Production[] {
-  const wordProductions: Production[] = []
-  const liner = new LineByLine(filePath)
+function isBinaryPointer(pointer: PreterminalPointer | BinaryPointer | UnaryPointer): pointer is BinaryPointer {
+  return (pointer as BinaryPointer).m !== undefined
+}
+
+// Methods
+export function getChart(): Chart {
+  return chart
+}
+
+export function getBackpointerChart(): BackpointerChart {
+  return backpointerChart
+}
+
+export function setBackpointerChart(bpChart: BackpointerChart): void {
+  backpointerChart = bpChart
+}
+
+export function setRulesFile(path: string): void {
+  rulesFile = path
+}
+
+export function setLexiconFile(path: string): void {
+  lexiconFile = path
+}
+
+export function getUnaryProductions(): Production[] {
+  const unaryProductions: Production[] = []
+  const liner = new LineByLine(rulesFile)
+
+  let line = liner.next()
+
+  while (line) {
+    const str = line.toString('ascii')
+    const regex = /(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>\d.*]*)/
+    const matches = str.match(regex)
+    if (matches && matches.groups) {
+      const {lhs, rhs, weight} = matches.groups
+      unaryProductions.push({lhs, rhs, weight: parseFloat(weight)})
+    }
+    line = liner.next()
+  }
+
+  return unaryProductions
+}
+
+export function addUnary(begin: number, end: number) {
+  let newRule = true
+  const unaryProductions: Production[] = getUnaryProductions()
+  while (newRule) {
+    newRule = false
+    unaryProductions.forEach(prod => {
+      const {lhs, rhs, weight} = prod
+      const newWeight = chart[begin][end][rhs] ? chart[begin][end][rhs] * weight : 0
+      const oldWeight = chart[begin][end][lhs] ? chart[begin][end][lhs] : 0
+      if (newWeight > oldWeight) {
+        const pointer: UnaryPointer = {A: lhs, B: rhs, weight: -1, i: begin, j: end}
+        backpointerChart[begin][end][lhs] = pointer
+        chart[begin][end][lhs] = newWeight
+        newRule = true
+      }
+    })
+  }
+}
+
+export function getAllNonterminals(): string[] {
+  const set = new Set<string>()
+  const liner = new LineByLine(rulesFile)
+
+  let line = liner.next()
+
+  while (line) {
+    const str = line.toString('ascii')
+    const regex = /(?<nt>.*) -> .*/
+    const matches = str.match(regex)
+    if (matches && matches.groups) {
+      const {nt} = matches.groups
+      set.add(nt)
+    }
+    line = liner.next()
+  }
+
+  return [...set] // transforms set into array
+}
+
+export function getProductionsOf(word: string): Production[] {
+  const productions: Production[] = []
+  const liner = new LineByLine(lexiconFile)
 
   let line = liner.next()
 
@@ -43,21 +126,49 @@ export function getWordProductionsFromLexiconFile(filePath: string, word: string
     const str = line.toString('ascii')
     const [lhs, rhs, weight] = str.split(' ')
     if (rhs === word) {
-      wordProductions.push({lhs, rhs, weight: parseFloat(weight)})
+      productions.push({lhs, rhs, weight: parseFloat(weight)})
     }
     line = liner.next()
   }
-  return wordProductions
+  return productions
 }
 
-/**
- * @param {string} rulesFilePath - Path of the .lexicon file
- * @param {string} nonTerminal - Nonterminal which is on the lhs
- * @returns {Production[]} All production rules yielded by lhs with two nonterminals on the rhs
- */
-export function getBinaryProductionsFromRulesFile(rulesFilePath: string, nonTerminal: string): Production[] {
+export function initializeEmptyChart(words: string[]): void {
+  chart = {}
+  for (let i = 0; i < words.length; i++) {
+    chart[i] = {}
+    for (let j = i + 1; j <= words.length; j++) {
+      chart[i][j] = {}
+    }
+  }
+}
+
+/* very similar to initializeEmptyChart. Could use refactoring **/
+export function initializeEmptyBackpointerChart(words: string[]): void {
+  backpointerChart = {}
+  for (let i = 0; i < words.length; i++) {
+    backpointerChart[i] = {}
+    for (let j = i + 1; j <= words.length; j++) {
+      backpointerChart[i][j] = {}
+    }
+  }
+}
+
+export function fillChartDiagonal(words: string[]): void {
+  for (let j = 1; j <= words.length; j++) {
+    const productions: Production[] = getProductionsOf(words[j - 1])
+    productions.forEach(prod => {
+      chart[j - 1][j][prod.lhs] = prod.weight
+      const pointer: PreterminalPointer = {A: prod.lhs, w: prod.rhs, weight: -1}
+      backpointerChart[j - 1][j][prod.lhs] = pointer
+    })
+    addUnary(j - 1, j)
+  }
+}
+
+export function getBinaryProductions(nonTerminal: string): Production[] {
   const binaryProductions: Production[] = []
-  const liner = new LineByLine(rulesFilePath)
+  const liner = new LineByLine(rulesFile)
 
   let line = liner.next()
 
@@ -78,296 +189,87 @@ export function getBinaryProductionsFromRulesFile(rulesFilePath: string, nonTerm
   return binaryProductions
 }
 
-/**
- * @param {string} rulesFilePath - Path of the .lexicon file
- * @param {string} nonTerminal - Nonterminal which is on the lhs
- * @returns {Production[]} All production rules yielded by lhs with two nonterminals on the rhs
- */
-export function getAllUnaryProductionsFromRulesFile(rulesFilePath: string): Production[] {
-  const unaryProductions: Production[] = []
-  const liner = new LineByLine(rulesFilePath)
-
-  let line = liner.next()
-
-  while (line) {
-    const str = line.toString('ascii')
-    const regex = /(?<lhs>.*) -> (?<rhs>[^ ]*) (?<weight>\d.*]*)/
-    const matches = str.match(regex)
-    if (matches && matches.groups) {
-      const {lhs, rhs, weight} = matches.groups
-      unaryProductions.push({lhs, rhs, weight: parseFloat(weight)})
-    }
-    line = liner.next()
-  }
-
-  return unaryProductions
+export function getPointer(i: number, j: number, symbol: string): Pointer {
+  return backpointerChart[i][j][symbol]
 }
 
-export function unaryClosure(rulesFilePath: string, charts: Charts, i: number, j: number) {
-  const {chart, back} = charts
-  const unaryProductions: Production[] = getAllUnaryProductionsFromRulesFile(rulesFilePath)
-  let newRule = true
-  let _weight: number
-  let _currentValue: number
-
-  while (newRule) {
-    newRule = false
-    unaryProductions.forEach(unaryProd => {
-      const {lhs, rhs, weight} = unaryProd
-      if (chart[i][j][lhs]) {
-        _currentValue = chart[i][j][lhs]
-      } else {
-        _currentValue = 0
-      }
-
-      if (chart[i][j][rhs]) {
-        _weight = weight * chart[i][j][rhs]
-      } else {
-        _weight = 0
-      }
-
-      if (_weight > _currentValue) {
-        newRule = true
-        chart[i][j][lhs] = _weight
-        back[i][j][lhs] = [-1, rhs, null]
-      }
-    })
+export function buildTree(pointer: Pointer): SExpression {
+  if (isPreterminalPointer(pointer)) {
+    const {A, w} = pointer
+    return [A, w]
   }
+  if (isBinaryPointer(pointer)) {
+    const {A, B, C, i, m, j} = pointer
+    const leftSubTree: Pointer = getPointer(i, m, B)
+    const rightSubTree: Pointer = getPointer(m, j, C)
+    return [A, buildTree(leftSubTree), buildTree(rightSubTree)]
+  }
+  // It it is not preterminal nor binary, then it is a UnaryPointer
+  const {A, B, i, j} = pointer
+  const subTree: Pointer = getPointer(i, j, B)
+  return [A, buildTree(subTree)]
 }
 
-/**
- * Given a sentence, returns a WeightChart initialized with the words of the sentence
- * @param {string} sentence - Word (terminal) that we want to find production rules for
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @param {string} rulesFilePath - Path of the .rules file
- * @param {Ba} back - BackChart
- * @returns {WeightChart} All production rules that yield the given word
- */
-export function initializeWeightChart(sentence: string, lexiconFilePath: string, rulesFilePath: string, back: BackChart): WeightChart {
-  const chart: WeightChart = []
-  const words = sentence.split(' ')
-  for (let i = 0; i < words.length; i++) {
-    chart[i] = []
-    for (let j = 0; j <= words.length; j++) {
-      chart[i][j] = {}
-    }
-  }
-  // Loop to get word production rules
-  for (let i = 1; i <= words.length; i++) {
-    // Loop to build the diagonal of the matrix
-    const rules = getWordProductionsFromLexiconFile(lexiconFilePath, words[i - 1])
-    rules.forEach(r => {
-      const {lhs, weight} = r
-      chart[i - 1][i]![lhs] = weight
-    })
-    const charts: Charts = {chart, back}
-    unaryClosure(rulesFilePath, charts, i - 1, i)
-  }
-  return chart
-}
+export function cyk(words: string[], startSymbol: string): SExpression | Error {
+  initializeEmptyChart(words)
+  initializeEmptyBackpointerChart(words)
+  fillChartDiagonal(words)
+  const numberOfWords = words.length
 
-/**
- * Reads each line of a .rules file and returns all nonterminals that appear on the LHS
- * @param {string} rulesFilePath - Path of the .rules file
- * @returns {string[]} All nonterminals on that appear on the LHS
- */
-export function getAllNonterminals(rulesFilePath: string): string[] {
-  const set = new Set<string>()
-  const liner = new LineByLine(rulesFilePath)
-
-  let line = liner.next()
-
-  while (line) {
-    const str = line.toString('ascii')
-    const regex = /(?<nt>.*) -> .*/
-    const matches = str.match(regex)
-    if (matches && matches.groups) {
-      const {nt} = matches.groups
-      set.add(nt)
-    }
-    line = liner.next()
-  }
-
-  return [...set] // transforms set into array
-}
-
-export function initializeBackChart(sentence: string): BackChart {
-  const back: BackChart = []
-
-  const words = sentence.split(' ')
-  for (let i = 0; i < words.length; i++) {
-    back[i] = []
-    for (let j = 0; j <= words.length; j++) {
-      back[i][j] = {}
-    }
-  }
-  return back
-}
-
-/**
- * More complex version of cyk algorithm. Uses weights to make decisions.
- * @param {string} sentence - Sentence to be parsed using CYK
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @param {string} rulesFilePath - Path of the .rules file
- * @returns {WeightChart} WeightChart
- */
-export function ckyChartWeight(sentence: string, lexiconFilePath: string, rulesFilePath: string): Charts {
-  const back: BackChart = initializeBackChart(sentence)
-  const chart: WeightChart = initializeWeightChart(sentence, lexiconFilePath, rulesFilePath, back)
-  const words = sentence.split(' ')
-
-  for (let r = 2; r <= words.length; r++) { // length of the span
-    for (let i = 0; i <= words.length - r; i++) {
+  for (let r = 2; r <= numberOfWords; r++) {
+    for (let i = 0; i <= numberOfWords - r; i++) {
       const j = i + r
 
-      const allNonTerminals = getAllNonterminals(rulesFilePath)
+      const allNonTerminals = getAllNonterminals()
       allNonTerminals.forEach(nt => {
         for (let m = i + 1; m <= j - 1; m++) {
-          const allBinaryRules = getBinaryProductionsFromRulesFile(rulesFilePath, nt)
+          const allBinaryRules = getBinaryProductions(nt)
           allBinaryRules.forEach(r => {
-            const {lhs, rhs, weight} = r /** weight is available as 3rd property if needed */
+            const {lhs, rhs, weight} = r
             const [B, C] = rhs.split(' ')
             const A = lhs
             if (chart[i][m]![B] && chart[m][j]![C]) {
-              // updateFunction
               const ruleWeight: number = chart[i][m]![B] * chart[m][j]![C] * weight
               if (!chart[i][j][A]) {
                 chart[i][j][A] = 0
+                // atualizar backpointers?
               }
               if (ruleWeight > chart[i][j]![A]) {
                 chart[i][j]![A] = ruleWeight
-                back[i][j]![A] = [m, B, C]
+                const pointer: BinaryPointer = {A, B, C, weight, i, m, j}
+                backpointerChart[i][j]![A] = pointer
               }
             }
           })
+          addUnary(i, j)
         }
-        // unary logic
-      })
-      const charts: Charts = {chart, back}
-      unaryClosure(rulesFilePath, charts, i, j)
-    }
-  }
-
-  return {chart, back}
-}
-
-/**
- *
- * @param {string} lexiconFile - Path of the .lexicon file
- * @param {string} sentence - sentence
- * @returns {boolean} true if all words of sentence is in .words file, false otherwise
- */
-export function isInLexicon(lexiconFile: string, sentence: string): boolean {
-  const liner = new LineByLine(lexiconFile)
-  const words = new Set(sentence.split(' '))
-
-  let line = liner.next()
-
-  while (line) {
-    const str = line.toString('ascii')
-    const [, rhs] = str.split(' ')
-    if (words.has(rhs)) {
-      words.delete(rhs)
-    }
-
-    line = liner.next()
-  }
-
-  return words.size === 0
-}
-
-/**
- * splits the input strings into an array of words and check
- * if all words of the input string are in the .words file
- * @param {string} lexiconFilePath - Path of the .words file
- * @param {string} input - given word
- * @returns {boolean} true if all words in the file, false otherwise
- */
-export function canBeParsed(lexiconFilePath: string, input: string): boolean {
-  const words: string[] = input.split(' ')
-  let canBeParsed = true
-  words.forEach(w => {
-    if (!isInLexicon(lexiconFilePath, w)) {
-      canBeParsed = false
-    }
-  })
-  return canBeParsed
-}
-
-/**
- * Reads all lines of .lexiconFile and create a new .words file with
- * all (unique) words read
- * @param {string} lexiconFilePath - Path of the .lexicon file
- * @returns {boolean} true if file is created, false otherwise
- */
-export function createWordsFile(lexiconFilePath: string): boolean {
-  const fileName = 'myfile.words'
-  let successfullyCreated = false
-
-  const liner = new LineByLine(lexiconFilePath)
-  const allWords = new Set<string>()
-
-  let line = liner.next()
-
-  while (line) {
-    const str = line.toString('ascii')
-    const [, word] = str.split(' ')
-    if (!allWords.has(word)) {
-      allWords.add(word)
-      fs.appendFile(fileName, word, err => {
-        if (err) throw err
-        successfullyCreated = true
       })
     }
-    line = liner.next()
   }
-
-  return successfullyCreated
+  if (backpointerChart[0][numberOfWords][startSymbol]) {
+    const pointer = backpointerChart[0][numberOfWords][startSymbol]
+    return buildTree(pointer)
+  }
+  return new Error(`${words}`)
 }
 
-/**
- * Reads all lines of .lexiconFile and create a new .words file with
- * all (unique) words read
- * @param {Charts} charts - Chart with weights
- * @param {string} startSymbol - Startsymbol
- * @param {number} start - start index of span
- * @param {number} end - end index of span
- * @param {string} sentence - end index of span
- * @returns {string} strings of rules
- */
-export function backTrace(charts: Charts, startSymbol: string, start: number, end: number, sentence: string): string {
-  const {back} = charts
-  if (start >= 0 && end >= 0 && back[start][end][startSymbol]) {
-    const a: string = startSymbol
-    let m: number = back[start][end][a][0]
-    const b: string = back[start][end][a][1]
-    const c: string = back[start][end][a][2]
-    if (m < 0) {
-      m = end
-
-      if (back[start][m][b]) {
-        return `(${a} ${backTrace(charts, b, start, m, sentence)})`
-      }
-      return `(${a} (${b} ${backTrace(charts, b, start, m, sentence)}))`
-    }
-    return `(${a} (${b} ${backTrace(charts, b, start, m, sentence)})(${c} ${backTrace(charts, c, m, end, sentence)}))`
+export function sExpression2Lisp(expression: SExpression | Error): string {
+  if (expression instanceof Error) {
+    return `(NOPARSE ${expression.message})`
   }
-  return sentence.split(' ')[start]
+  if (typeof expression[0] === 'string' && typeof expression[1] === 'string') {
+    return `(${expression[0]} ${expression[1]})`
+  }
+  if (typeof expression[0] === 'string' && typeof expression[1] !== 'string' && !expression[2]) {
+    return `(${expression[0]} ${sExpression2Lisp(expression[1])})`
+  }
+  return `(${expression[0]} ${sExpression2Lisp(expression[1])} ${sExpression2Lisp(expression[2])})`
 }
-/**
- * Reads input sentence and returns best tree in PTB format
- * @param {string} sentence - Sentence of which we want the bes tree
- * @param {string} lexiconFilePath - Path to .lexicon file
- * @param {string} rulesFilePath - Path to .rules file
- * @param {string} startSymbol - If not passed by user, the default value = 'ROOT'
- * @returns {string} Best Tree in PTB format
- */
-export function createPTB(sentence: string, lexiconFilePath: string, rulesFilePath: string, startSymbol = 'ROOT'): string {
-  const charts = ckyChartWeight(sentence, lexiconFilePath, rulesFilePath)
-  const {chart} = charts
-  const j = chart[0].length - 1
-  const i = 0
-  return backTrace(charts, startSymbol, i, j, sentence)
+
+async function read(stream: NodeJS.ReadStream) {
+  const chunks: Uint8Array[] = []
+  for await (const chunk of stream) chunks.push((chunk as Uint8Array))
+  return Buffer.concat(chunks).toString('utf8')
 }
 
 // Main
@@ -416,30 +318,21 @@ export default class Parse extends Command {
     const {args} = this.parse(Parse)
     const {flags} = this.parse(Parse)
     const {rulesFilePath, lexiconFilePath} = args
-    // console.log('📝 Parser started')
-    // console.log('What sentence would you like to parse?')
+    // Set global variables
+    rulesFile = rulesFilePath
+    lexiconFile = lexiconFilePath
 
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-      terminal: true,
-    })
+    const startSymbol = flags['initial-nonterminal'] ? flags['initial-nonterminal'] : 'ROOT'
+    // this.log(startSymbol)
+    const input = await read(process.stdin)
+    const lines = input.split('\n')
 
-    rl.on('line', function (line) {
-      if (canBeParsed(lexiconFilePath, line)) {
-        // console.log('😃 It seems that your sentence can be parsed')
-        if (flags['initial-nonterminal']) {
-          console.log(createPTB(line, lexiconFilePath, rulesFilePath, flags['initial-nonterminal']))
-        } else {
-          console.log(createPTB(line, lexiconFilePath, rulesFilePath))
-        }
-      } else {
-        console.log(`NOPARSE ${line}`)
+    lines.forEach(l => {
+      if (l.length > 0) {
+        const words = l.split(' ')
+        const result = cyk(words, startSymbol)
+        this.log(sExpression2Lisp(result))
       }
-      rl.close()
-      process.stdin.destroy()
     })
-
-    // If user passed custom initial-nonterminal as flag, then use it.
   }
 }
